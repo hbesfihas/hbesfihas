@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery de Esfihas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+        }
+        .header img {
+            height: 40px;
+            margin-right: 15px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .menu {
+            padding: 20px;
+        }
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .menu-item span {
+            flex-grow: 1;
+            margin-left: 15px;
+        }
+        .menu-item button {
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            text-align: center;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .menu-item button:disabled {
+            background-color: #ccc;
+        }
+        .menu-item .quantity {
+            width: 30px;
+            text-align: center;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/static/logo.png" alt="Logo da loja">
+        <h1>Delivery de Esfihas</h1>
+    </div>
+    <div class="menu">
+        {% for esfiha in esfihas %}
+        <div class="menu-item">
+            <strong>{{ esfiha.name }}</strong>
+            <span>Sabor: {{ esfiha.sabor }}</span>
+            <button onclick="decrement('{{ esfiha.id }}')">-</button>
+            <span class="quantity" id="quantity-{{ esfiha.id }}">0</span>
+            <button onclick="increment('{{ esfiha.id }}')">+</button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function increment(id) {
+            const quantitySpan = document.getElementById(`quantity-${id}`);
+            let currentQuantity = parseInt(quantitySpan.textContent);
+            quantitySpan.textContent = currentQuantity + 1;
+        }
+
+        function decrement(id) {
+            const quantitySpan = document.getElementById(`quantity-${id}`);
+            let currentQuantity = parseInt(quantitySpan.textContent);
+            if (currentQuantity > 0) {
+                quantitySpan.textContent = currentQuantity - 1;
+            }
+        }
+    </script>
+</body>
+</html>

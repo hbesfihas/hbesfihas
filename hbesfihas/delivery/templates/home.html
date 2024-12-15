@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fazer Pedido</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+ </head>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Monte seu Pedido</h1>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <h2>Produtos</h2>
+        </h1>
+        <form action="{% url 'processa_pedido' %}" class="bg-white p-4 rounded shadow-md" method="POST">
+         {% csrf_token %}
+            <div class="mb-3">
+                {% for produto in produtos %}
+                <div class="border p-4 rounded">
+                    <div class="w-full h-48 mb-4 flex justify-center items-center">
+                     <img alt="Imagem do produto {{ produto.nome }}" class="w-32 h-32 object-cover rounded-full" src="https://storage.googleapis.com/a1aa/image/QxVuZFoHJBJKP9G7VAwwzm79kKn1mHCUYbU7RrPGdN1YWueJA.jpg"/>
+                    </div>
+                    <h2 class="text-xl font-semibold">
+                     {{ produto.nome }}
+                    </h2>
+                    <p class="text-gray-700">
+                     {{ produto.descricao }}
+                    </p>
+                    <p class="text-gray-900 font-bold">
+                     R$ {{ produto.preco }}
+                    </p>
+                    <label class="block mt-2" for="produto_{{ produto.id }}">
+                     Quantidade:
+                    </label>
+                    <input class="w-full border rounded p-2" id="produto_{{ produto.id }}" min="0" name="produto_{{ produto.id }}" type="number"/>
+                   </div>
+                {% endfor %}
+            </div>
+
+            <h2>Informações do Pedido</h2>
+            <div class="mb-3">
+                <label for="bairro" class="form-label">Bairro:</label>
+                <input type="text" id="bairro" name="bairro" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="endereco" class="form-label">Endereço:</label>
+                <input type="text" id="endereco" name="endereco" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="forma_pagamento" class="form-label">Forma de Pagamento:</label>
+                <select id="forma_pagamento" name="forma_pagamento" class="form-select" required>
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="pix">Pix</option>
+                    <option value="cartao">Cartão</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Finalizar Pedido</button>
+        </form>
+    </div>
+</body>
+</html>
