@@ -11,7 +11,7 @@ class Produto(models.Model):
     nome = models.CharField(max_length=30, unique=True, help_text="Nome do sabor da esfiha")
     descricao = models.TextField(blank=True, help_text="Descrição dos igredientes")
     preco = models.DecimalField(max_digits=3, decimal_places=2)
-    imagem = models.ImageField(blank=True, null=True)
+    imagem = models.ImageField(upload_to='produtos/',blank=True, null=True)
     
     def __str__(self):
         return self.nome
