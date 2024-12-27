@@ -11,8 +11,38 @@
     <link rel="stylesheet" href="{% static 'css/custom.css' %}">
 </head>
 <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <!-- Logo -->
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="{% static 'imagens/logo.jpg' %}" alt="Logo" width="40" height="40" class="rounded-circle me-2">
+                <span>HB Esfihas</span>
+            </a>
+            <!-- Botão para menu colapsado (em telas pequenas) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- Links do menu -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#cardapio">Cardápio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contato">Contato</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo principal -->
     <div class="container mt-5">
-        <h1 class="text-center mb-4">Cardápio</h1>
+        <h1 id="cardapio" class="text-center mb-4">Cardápio</h1>
         <div class="row">
             {% for produto in produtos %}
             <div class="col-md-4">
@@ -21,7 +51,7 @@
                     {% if produto.imagem %}
                     <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" class="product-img mb-3">
                     {% else %}
-                    <img src="media/imagens/imagem_padrao.jpg" alt="img" class="product-img mb-3">
+                    <img src="{% static 'imagens/imagem_padrao.jpg' %}" alt="img" class="product-img mb-3">
                     {% endif %}
                     <!-- Nome do Produto -->
                     <div class="product-name">{{ produto.nome }}</div>
@@ -45,38 +75,61 @@
             {% endfor %}
         </div>
     </div>
+    <div class="product-price" id="product-price-{{ produto.id }}">R$ {{ produto.preco|floatformat:2 }}</div>
 
+    <!-- Subtotal -->
+    <div id="subtotal" class="text-center mt-3">
+        <strong>Subtotal: R$ 0,00 </strong>
+    </div>       
+    <div id="taxa-entrega" class="text-center mt-3">
+        <strong>Taxa de Entrega: R$ 0,00</strong>
+    </div>
+    
+    <div id="total" class="text-center mt-3">
+        <strong>Total: R$ 0,00</strong>
+    </div>
+    <form method="post" action="{% url 'finalizar_pedido' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="bairro" class="form-label">Bairro</label>
+                <select name="bairro" id="bairro" class="form-select" onchange="updateTotal()" required>
+                    <option value="" disabled selected>Selecione um bairro</option>
+                    {% for bairro in bairros %}
+                        <option value="{{ bairro.id }}" data-taxa="{{ bairro.taxa_entrega|floatformat:2|default:0 }}">{{ bairro.nome }} - R$ {{ bairro.taxa_entrega|floatformat:2 }}</option>
+                    {% endfor %}
+                </select>                
+            </div>
+            
+            <div class="mb-3">
+                <label for="endereco" class="form-label">Endereço</label>
+                <textarea name="endereco" id="endereco" class="form-control" placeholder="Digite o endereço" rows="2" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="forma_pagamento" class="form-label">Forma de Pagamento</label>
+                <select name="forma_pagamento" id="forma_pagamento" class="form-select" required>
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="pix">PIX</option>
+                    <option value="cartaodebito">Cartão Débito</option>
+                    <option value="cartaocredito">Cartão Crédito</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <button type="button" class="btn btn-outline-secondary" onclick="obterLocalizacao()">Obter Localização Atual</button>
+                <input type="hidden" name="latitude" id="latitude">
+                <input type="hidden" name="longitude" id="longitude">
+            </div>
+            <button type="submit" class="btn btn-success">Finalizar Pedido</button>
+        </form>
+    </div>
+    <input type="hidden" name="subtotal" id="subtotal-value" value="0.00">
     <!-- Bootstrap JS -->
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+   
     <!-- JavaScript para controlar os botões -->
-    <script>
-        function addItem(button) {
-            const quantitySpan = button.nextElementSibling;
-            const quantityValue = quantitySpan.querySelector('span');
-            let currentQuantity = parseInt(quantityValue.innerText);
+ <!-- Bootstrap JS -->
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 
-            // Aumentar a quantidade e exibir o contador
-            currentQuantity++;
-            quantityValue.innerText = currentQuantity;
+<!-- JavaScript para controlar os botões -->
+<script src="{% static 'js/main.js' %}"></script>
 
-            // Mostrar o contador e o botão de "-" se ainda não estiver visível
-            quantitySpan.classList.remove('d-none');
-        }
-
-        function removeItem(button) {
-            const quantitySpan = button.parentElement;
-            const quantityValue = quantitySpan.querySelector('span');
-            let currentQuantity = parseInt(quantityValue.innerText);
-
-            // Diminuir a quantidade
-            currentQuantity--;
-            quantityValue.innerText = currentQuantity;
-
-            // Esconder o contador e o botão de "-" se a quantidade chegar a 0
-            if (currentQuantity === 0) {
-                quantitySpan.classList.add('d-none');
-            }
-        }
-    </script>
 </body>
 </html>
