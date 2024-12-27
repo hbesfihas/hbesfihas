@@ -78,8 +78,12 @@ WSGI_APPLICATION = "hbesfihas.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "hbesfihas",
+        "USER": "root",
+        "PASSWORD": "Apple94Br#192168",
+        "HOST": "localhost",
+        "PORT": "3306",
     }
 }
 
