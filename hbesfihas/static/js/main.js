@@ -1,43 +1,3 @@
-document.querySelector("form").addEventListener("submit", function(event) {
-    event.preventDefault(); // Evita o envio tradicional do formulário
-
-    // Captura os dados do formulário
-    const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData.entries());
-    data.itens = []; // Adiciona os itens do pedido
-
-    document.querySelectorAll(".product-card").forEach(card => {
-        const quantity = parseInt(card.querySelector(".quantity span").innerText);
-        if (quantity > 0) {
-            data.itens.push({
-                nome: card.querySelector(".product-name").innerText,
-                quantidade: quantity,
-                preco: parseFloat(
-                    card.querySelector(".product-price").innerText.replace('R$', '').replace(',', '.')
-                )
-            });
-        }
-    });
-
-    // Envia os dados ao backend
-    fetch("/imprimir-pedido/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": formData.get("csrfmiddlewaretoken")
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.status === "success") {
-            alert("Pedido enviado para impressão com sucesso!");
-        } else {
-            alert("Erro ao imprimir: " + result.message);
-        }
-    })
-    .catch(error => console.error("Erro:", error));
-});
 let subtotal = 0; // Subtotal inicial
 let taxaEntrega = 0; // Taxa de entrega inicial
 
@@ -48,54 +8,77 @@ function formatCurrency(value) {
         currency: 'BRL',
     }).format(value);
 }
+let produtos = {};
 
 function addItem(button) {
-    const quantitySpan = button.nextElementSibling;
-    const quantityValue = quantitySpan.querySelector('span');
     const productCard = button.closest('.product-card');
-    const productPrice = parseFloat(
-        productCard.querySelector('.product-price').innerText.replace('R$', '').replace(',', '.').trim()
-    );
-
-    let currentQuantity = parseInt(quantityValue.innerText);
+    const quantitySpan = productCard.querySelector('.quantity span');
+    const hiddenInput = productCard.querySelector('input[type="hidden"]');
+    let currentQuantity = parseInt(quantitySpan.innerText);
 
     // Incrementa a quantidade
     currentQuantity++;
-    quantityValue.innerText = currentQuantity;
+    quantitySpan.innerText = currentQuantity;
+    hiddenInput.value = currentQuantity;
 
-    // Exibe o contador e o botão de "-" se ainda não estiver visível
-    quantitySpan.classList.remove('d-none');
-
-    // Atualiza o subtotal
-    subtotal += productPrice;
-    updateSubtotal();
-    updateTotal();
+    // Exibe o contador se ainda estiver oculto
+    productCard.querySelector('.quantity').classList.remove('d-none');
+    console.log(`Adicionado: ${productCard.querySelector('.product-name').innerText} - Quantidade: ${currentQuantity}`);
 }
 
 function removeItem(button) {
-    const quantitySpan = button.parentElement;
-    const quantityValue = quantitySpan.querySelector('span');
     const productCard = button.closest('.product-card');
-    const productPrice = parseFloat(
-        productCard.querySelector('.product-price').innerText.replace('R$', '').replace(',', '.').trim()
-    );
-
-    let currentQuantity = parseInt(quantityValue.innerText);
+    const quantitySpan = productCard.querySelector('.quantity span');
+    const hiddenInput = productCard.querySelector('input[type="hidden"]');
+    let currentQuantity = parseInt(quantitySpan.innerText);
 
     // Decrementa a quantidade
-    currentQuantity--;
-    quantityValue.innerText = currentQuantity;
+    currentQuantity = Math.max(0, currentQuantity - 1); // Evita valores negativos
+    quantitySpan.innerText = currentQuantity;
+    hiddenInput.value = currentQuantity;
 
-    // Esconde o contador e o botão de "-" se a quantidade chegar a 0
+    // Esconde o contador se a quantidade for 0
     if (currentQuantity === 0) {
-        quantitySpan.classList.add('d-none');
+        productCard.querySelector('.quantity').classList.add('d-none');
+    }
+    console.log(`Removido: ${productCard.querySelector('.product-name').innerText} - Quantidade: ${currentQuantity}`);
+}
+
+function enviarPedido() {
+    const produtos = [];
+
+    // Captura os produtos e quantidades
+    document.querySelectorAll('.product-card').forEach(card => {
+        const nome = card.querySelector('.product-name').innerText.trim(); // Nome do produto
+        const quantidade = parseInt(card.querySelector('input[type="hidden"]').value); // Quantidade selecionada
+
+        if (quantidade > 0) {
+            produtos.push({ nome, quantidade });
+        }
+    });
+
+    // Verifica se há pelo menos um produto selecionado
+    if (produtos.length === 0) {
+        alert("Selecione pelo menos um produto para finalizar o pedido.");
+        return;
     }
 
-    // Atualiza o subtotal
-    subtotal -= productPrice;
-    updateSubtotal();
-    updateTotal();
+    console.log("Produtos enviados:", produtos);
+
+    // Preenche os campos ocultos com os valores corretos
+    document.getElementById('form-produtos').value = JSON.stringify(produtos);
+    document.getElementById('form-endereco').value = document.getElementById('endereco').value.trim();
+    document.getElementById('form-subtotal').value = document.getElementById('subtotal-value').value.trim();
+    document.getElementById('form-total').value = document.getElementById('total').innerText.replace('R$', '').replace(',', '.').trim();
+    document.getElementById('form-taxa-entrega').value = document.getElementById('taxa-entrega').innerText.replace('R$', '').replace(',', '.').trim();
+    document.getElementById('form-troco').value = document.getElementById('troco').value.trim();
+    document.getElementById('form-bairro').value = document.getElementById('bairro').value.trim();
+    document.getElementById('form-pagamento').value = document.getElementById('forma_pagamento').value.trim();
+
+    // Submete o formulário
+    document.getElementById('pedido-form').submit();
 }
+
 
 function updateSubtotal() {
     // Atualiza o subtotal na interface
@@ -124,54 +107,32 @@ function updateTotal() {
     
     // Calcula o total
     let total = subtotal + taxaEntrega;
+   
+    // Exibição condicional para o campo de Acréscimo
+    const acrescimoDiv = document.getElementById('acrescimo');
+    let acrescimo = 0;
 
-    // Adiciona 5% se a forma de pagamento for cartão de crédito
     if (formaPagamento === 'cartaocredito') {
-        total = total * 1.05;
+        acrescimo = total * 0.05;
+        acrescimoDiv.innerHTML = `<strong>Taxa cartão de Crédito (5%): ${formatCurrency(acrescimo)}</strong>`;
+        acrescimoDiv.classList.remove('d-none');
+    } else {
+        acrescimoDiv.classList.add('d-none');
     }
+
+     // Exibição condicional para o campo de Troco
+     const trocoDiv = document.getElementById('campo-troco');
+     if (formaPagamento === 'dinheiro') {
+         trocoDiv.classList.remove('d-none');
+     } else {
+         trocoDiv.classList.add('d-none');
+     }
+ 
+     // Calcula o total final
+     total += acrescimo;
 
     // Atualiza o total na interface
     document.getElementById('total').innerHTML = `<strong>Total: ${formatCurrency(total)}</strong>`;
+
 }
-document.getElementById('forma_pagamento').addEventListener('change', updateTotal)
 
-document.querySelector("form").addEventListener("submit", function(event) {
-    event.preventDefault(); // Evita o envio tradicional do formulário
-
-    // Captura os dados do formulário
-    const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData.entries());
-    data.itens = []; // Adiciona os itens do pedido
-
-    document.querySelectorAll(".product-card").forEach(card => {
-        const quantity = parseInt(card.querySelector(".quantity span").innerText);
-        if (quantity > 0) {
-            data.itens.push({
-                nome: card.querySelector(".product-name").innerText,
-                quantidade: quantity,
-                preco: parseFloat(
-                    card.querySelector(".product-price").innerText.replace('R$', '').replace(',', '.')
-                )
-            });
-        }
-    });
-
-    // Envia os dados ao backend
-    fetch("/imprimir-pedido/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": formData.get("csrfmiddlewaretoken")
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.status === "success") {
-            alert("Pedido enviado para impressão com sucesso!");
-        } else {
-            alert("Erro ao imprimir: " + result.message);
-        }
-    })
-    .catch(error => console.error("Erro:", error));
-});

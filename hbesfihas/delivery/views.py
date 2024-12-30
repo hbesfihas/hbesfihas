@@ -1,93 +1,117 @@
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import ItemPedido, User, Produto, Bairro, Pedido
+from django.contrib.auth import login
+from .forms import EntradaForm
 import json
-from django.shortcuts import render, redirect
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Pedido, Produto, Bairro
-from .serializers import PedidoSerializer, PedidoCreateSerializer
-from .forms import PedidoForm, ItemPedidoForm
-from json import dumps
-from django.http import JsonResponse
-from escpos.printer import Usb
+from .utils import gerar_pix_qrcode, gerar_pix_copiaecola
 
 def home(request):
-    produtos = Produto.objects.all()
-    bairros = Bairro.objects.all()
-    return render(request, 'home.html', {'produtos': produtos, 'bairros': bairros})
+    user = request.user
+    if request.user.is_authenticated:
+        produtos = Produto.objects.all()
+        bairros = Bairro.objects.all()
+        ultimo_pedido = Pedido.objects.filter(user=user).order_by('-criado_em').first()
+        if ultimo_pedido:
+            endereco = ultimo_pedido.endereco
+        else:
+            endereco = None
+        return render(request, 'home.html', {'produtos': produtos, 'bairros': bairros, 'user': user, 'endereco': endereco})
+    else:
+        return redirect('login')
 
-class PedidoListView(APIView):
-    def get(self, request):
-        pedidos = Pedido.objects.all()
-        serializer = PedidoSerializer(pedidos, many=True)
-        return Response(serializer.data)
-    
+def entrada_view(request):
+    if request.method == 'POST':
+            nome = request.POST.get('nome')
+            whatsapp = request.POST.get('whatsapp')
 
-class PedidoCreateView(APIView):
-    def post(self, request):
-        serializer = PedidoCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            pedido = serializer.save()
-            return Response(
-                {"message": "Pedido criado com Sucesso!", "pedido_id": pedido.id},
-                status=status.HTTP_201_CREATED
+
+            if not nome or not whatsapp:
+                return render(request, 'login.html', {"error": "Nome e Whatsapp são obrigatórios"})
+            # Verifica se o usuário já existe ou cria um novo
+            user, created = User.objects.get_or_create(
+                whatsapp=whatsapp,
+                defaults={'nome': nome}
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+            # Atualiza o nome se o usuário já existir e estiver diferente
+            if not created and user.nome != nome:
+                user.nome = nome
+                user.save()
+
+            # Autentica o usuário
+            login(request, user)
+            return redirect('home')  # Redireciona para a página inicial
+    else:
+        form = EntradaForm()
+
+    return render(request, 'login.html', {'form': form})
+
+def pedidos(request):
+    return render(request, 'pedidos.html', {'pedidos': pedidos})
+
+@login_required
 def finalizar_pedido(request):
     if request.method == "POST":
-        bairro_id = request.POST.get('bairro')
-        forma_pagamento = request.POST.get('forma_pagamento')
-        subtotal = request.POST.get('subtotal')
-
-        # Recuperar o bairro a partir do ID
-        bairro = Bairro.objects.get(id=bairro_id)
-
-        # Processar a lógica de pagamento, salvar o pedido, etc.
-        # Exemplo: Pedido.objects.create(bairro=bairro, forma_pagamento=forma_pagamento, subtotal=subtotal)
-
-        return redirect('sucesso')  # Redirecionar para uma página de sucesso ou confirmação
-
-def preparar_texto_impressao(pedido):
-    texto = "====== HB Esfihas ======\n"
-    texto += "Pedido realizado em: {}\n".format(pedido.data.strftime('%d/%m/%Y %H:%M'))
-    texto += "-------------------------\n"
-    texto += "Itens:\n"
-    for item in pedido.itens.all():
-        texto += "{}x {} - R$ {:.2f}\n".format(item.quantidade, item.produto.nome, item.total)
-    texto += "-------------------------\n"
-    texto += "Subtotal: R$ {:.2f}\n".format(pedido.subtotal)
-    texto += "Taxa de entrega: R$ {:.2f}\n".format(pedido.taxa_entrega)
-    texto += "Total: R$ {:.2f}\n".format(pedido.total)
-    texto += "-------------------------\n"
-    texto += "Forma de pagamento: {}\n".format(pedido.forma_pagamento)
-    texto += "Observações:\n{}\n".format(pedido.observacoes or "Nenhuma")
-    texto += "=========================\n"
-    texto += "Obrigado pela preferência!"
-    return texto
-def imprimir_pedido(request):
-    if request.method == "POST":
-        dados = json.loads(request.body)
         try:
-            texto_impressao = "====== HB Esfihas ======\n"
-            texto_impressao += "Itens do Pedido:\n"
-            for item in dados["itens"]:
-                texto_impressao += f"{item['quantidade']}x {item['nome']} - R$ {item['preco']:.2f}\n"
-            texto_impressao += "-------------------------\n"
-            texto_impressao += f"Subtotal: R$ {dados['subtotal']}\n"
-            texto_impressao += f"Taxa de entrega: R$ {dados['taxa_entrega']}\n"
-            texto_impressao += f"Total: R$ {dados['total']}\n"
-            texto_impressao += f"Forma de pagamento: {dados['forma_pagamento']}\n"
-            texto_impressao += "=========================\n"
-            texto_impressao += "Obrigado pela preferência!\n"
+            # Dados principais
+            user = request.user
+            endereco = request.POST.get("endereco")
+            subtotal = float(request.POST.get("subtotal", 0))
+            total = float(request.POST.get("total", 0))
+            taxa_entrega = float(request.POST.get("taxa_entrega", 0))
+            taxa_cartao_credito = float(request.POST.get("taxa_cartao_credito", 0))
+            troco = float(request.POST.get("troco", 0))
+            bairro_id = int(request.POST.get("bairro"))
+            forma_pagamento = request.POST.get("forma_pagamento")
+            produtos_json = request.POST.get("produtos")
 
-            # Configurar a impressora USB
-            printer = Usb(0x28E9, 0x0289)  # Substitua pelos valores corretos
-            printer.text(texto_impressao)
-            printer.cut()
+            # Validação
+            bairro = get_object_or_404(Bairro, id=bairro_id)
+            if not produtos_json:
+                return JsonResponse({"message": "Nenhum produto selecionado."}, status=400)
 
-            return JsonResponse({"status": "success"})
+            # Parse dos produtos
+            produtos = json.loads(produtos_json)
+
+            # Cria o pedido
+            pedido = Pedido.objects.create(
+                user=request.user,
+                endereco=endereco,
+                subtotal=subtotal,
+                total=total,
+                taxa_entrega=taxa_entrega,
+                taxa_cartao_credito=taxa_cartao_credito,
+                troco=troco,
+                bairro=bairro,
+                forma_pagamento=forma_pagamento,
+            )
+
+            # Cria os itens do pedido
+            for produto in produtos:
+                nome = produto["nome"]
+                quantidade = produto["quantidade"]
+                ItemPedido.objects.create(pedido=pedido, nome=nome, quantidade=quantidade)
+
+            return JsonResponse({"message": "Pedido realizado com sucesso!", "pedido_id": pedido.id}, status=200)
+
         except Exception as e:
-            print("Erro ao imprimir:", e)
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
-    return JsonResponse({"status": "error", "message": "Método não permitido"}, status=405)
+            return JsonResponse({"message": "Erro ao processar o pedido.", "error": str(e)}, status=500)
+    return JsonResponse({"message": "Método não permitido."}, status=405)
 
+
+def gerar_pix_qrcode_view(request):
+    chave_pix = "63981216616"
+    nome_recebedor = "HB Esfihas"
+    cidade = "Pedro Afonso"
+    valor = finalizar_pedido.total  # Valor da transação
+    descricao = "Descrição do pagamento"
+
+    # Gera o QR Code
+    img = gerar_pix_qrcode(chave_pix, nome_recebedor, cidade, valor, descricao)
+    codigo_pix = gerar_pix_copiaecola(chave_pix, nome_recebedor, cidade, valor, descricao)
+    # Retorna a imagem como resposta HTTP
+    response = HttpResponse(content_type="image/png")
+    img.save(response, "PNG")
+    return response, JsonResponse({"codigo_pix": codigo_pix})

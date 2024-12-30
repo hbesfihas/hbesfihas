@@ -1,52 +1,14 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio</title>
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <!-- Arquivo CSS personalizado -->
-    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-            <!-- Logo -->
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="{% static 'imagens/logo.jpg' %}" alt="Logo" width="40" height="40" class="rounded-circle me-2">
-                <span>HB Esfihas</span>
-            </a>
-            <!-- Botão para menu colapsado (em telas pequenas) -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <!-- Links do menu -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#cardapio">Cardápio</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#contato">Contato</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Conteúdo principal -->
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}   
+ <!-- Conteúdo principal -->
     <div class="container mt-5">
         <h1 id="cardapio" class="text-center mb-4">Cardápio</h1>
         <div class="row">
             {% for produto in produtos %}
             <div class="col-md-4">
                 <div class="product-card text-center">
+                    {% csrf_token %}
                     <!-- Imagem do Produto -->
                     {% if produto.imagem %}
                     <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" class="product-img mb-3">
@@ -66,28 +28,33 @@
                     <div class="mt-3">
                         <button class="btn btn-success btn-sm add-btn" onclick="addItem(this)">+</button>
                         <span class="quantity d-none">
-                            <span class="mx-2">0</span>
+                            <span id="quantidade-{{ produto.nome}}" class="mx-2">0</span>
+                            <input type="number" name="quantidade_{{ produto.nome }}" min="0" value="0" class="d-none w-50 align-center" >
                             <button class="btn btn-danger btn-sm" onclick="removeItem(this)">-</button>
                         </span>
                     </div>
+                    <input type="hidden" name="quantidade_{{ produto.nome }}" value="0" id="campo-quantidade"/>
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
-    <div class="product-price" id="product-price-{{ produto.id }}">R$ {{ produto.preco|floatformat:2 }}</div>
-
-    <!-- Subtotal -->
-    <div id="subtotal" class="text-center mt-3">
-        <strong>Subtotal: R$ 0,00 </strong>
-    </div>       
-    <div id="taxa-entrega" class="text-center mt-3">
-        <strong>Taxa de Entrega: R$ 0,00</strong>
+<hr>
+    <div class="summary-container text-center mt-5 p-4 rounded shadow">
+        <div id="subtotal" class="summary-item">
+            <strong>Subtotal:</strong> <span class="value">R$ 0,00</span>
+        </div>
+        <div id="taxa-entrega" class="summary-item">
+            <strong>Taxa de Entrega:</strong> <span class="value">R$ 0,00</span>
+        </div>
+         <div id="acrescimo" class="summary-item d-none">
+                <strong>Taxa Cartão Crédito (5%):</strong> <span class="value">R$ 0,00</span>
+            </div>
+        <div id="total" class="summary-item total mt-3">
+            <strong>Total:</strong> <span class="value">R$ 0,00</span>
+        </div>
     </div>
-    
-    <div id="total" class="text-center mt-3">
-        <strong>Total: R$ 0,00</strong>
-    </div>
+ <hr>   
     <form method="post" action="{% url 'finalizar_pedido' %}">
             {% csrf_token %}
             <div class="mb-3">
@@ -104,32 +71,42 @@
                 <label for="endereco" class="form-label">Endereço</label>
                 <textarea name="endereco" id="endereco" class="form-control" placeholder="Digite o endereço" rows="2" required></textarea>
             </div>
+
+            <!-- Campo de seleção de forma de pagamento -->
+
             <div class="mb-3">
                 <label for="forma_pagamento" class="form-label">Forma de Pagamento</label>
-                <select name="forma_pagamento" id="forma_pagamento" class="form-select" required>
+                <select name="forma_pagamento" id="forma_pagamento" class="form-select" onchange="updateTotal()" required>
+                    <option value="" disabled selected> Selecione a forma de pagamento</option>
                     <option value="dinheiro">Dinheiro</option>
                     <option value="pix">PIX</option>
                     <option value="cartaodebito">Cartão Débito</option>
                     <option value="cartaocredito">Cartão Crédito</option>
                 </select>
             </div>
-            <div class="mb-3">
-                <button type="button" class="btn btn-outline-secondary" onclick="obterLocalizacao()">Obter Localização Atual</button>
-                <input type="hidden" name="latitude" id="latitude">
-                <input type="hidden" name="longitude" id="longitude">
+
+            <!-- Campo de Troco (aparece somente se a forma de pagamento for dinheiro) -->
+           
+            <div id="campo-troco" class="mb-3 d-none">
+                <label for="troco" class="form-label">Troco para quanto?</label>
+                <input type="number" name="troco" id="troco" class="form-control" placeholder="Digite o valor" min="0" step="5.00">
             </div>
-            <button type="submit" class="btn btn-success">Finalizar Pedido</button>
+            <button type="button" class="btn btn-success w-100" onclick="enviarPedido()">Finalizar Pedido</button>
         </form>
     </div>
     <input type="hidden" name="subtotal" id="subtotal-value" value="0.00">
-    <!-- Bootstrap JS -->
-   
-    <!-- JavaScript para controlar os botões -->
- <!-- Bootstrap JS -->
-<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <input type="hidden" name="itens" id="itens">
+    <form id="pedido-form" method="POST" action="/finalizar_pedido/">
+        {% csrf_token %}
+        <input type="hidden" name="endereco" id="form-endereco">
+        <input type="hidden" name="subtotal" id="form-subtotal">
+        <input type="hidden" name="total" id="form-total">
+        <input type="hidden" name="taxa_entrega" id="form-taxa-entrega">
+        <input type="hidden" name="taxa_cartao_credito" id="form-taxa-cartao">
+        <input type="hidden" name="troco" id="form-troco">
+        <input type="hidden" name="bairro" id="form-bairro">
+        <input type="hidden" name="forma_pagamento" id="form-pagamento">
+        <input type="hidden" name="produtos" id="form-produtos">
+    </form>
 
-<!-- JavaScript para controlar os botões -->
-<script src="{% static 'js/main.js' %}"></script>
-
-</body>
-</html>
+{% endblock %}
