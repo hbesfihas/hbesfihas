@@ -99,15 +99,6 @@ class Pedido(models.Model):
         return f"Pedido #{self.id} - {self.user}"
 
 
-class Itens(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='pedido')
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='itens')
-    quantidade = models.PositiveIntegerField()
-    preco_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.quantidade}x {self.produto.nome} no Pedido #{self.pedido.id}"
-
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
