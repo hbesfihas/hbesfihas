@@ -3,7 +3,6 @@ from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db.models import PositiveBigIntegerField
 class CustomUserManager(BaseUserManager):
     def create_user(self, whatsapp, nome, password=None):
         if not whatsapp:
@@ -25,6 +24,7 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractBaseUser):
     whatsapp = models.CharField(max_length=15, unique=True)
     nome = models.CharField(max_length=100)
+    username = None
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
@@ -73,32 +73,30 @@ class Produto(models.Model):
         return self.nome
     
 class Pedido(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='pedidos')
-    bairro = models.ForeignKey(Bairro, on_delete=models.SET_NULL, null=True)
-    endereco = models.TextField(max_length=100, null=True)
-    forma_pagamento = models.CharField(max_length=20, blank=True)
-    troco = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    STATUS_CHOICES = [
+        ('pendente', 'Pendente'),
+        ('em_preparo', 'Em preparo'),
+        ('pronto', 'Pronto para retirada'),
+        ('a_caminho', 'A caminho'),
+        ('entregue', 'Entregue'),
+        ('cancelado', 'Cancelado'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pedidos')
+    endereco = models.CharField(max_length=100, blank=True)
+    itens = models.TextField(max_length=100)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, blank=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2, blank=True)
     taxa_entrega = models.DecimalField(max_digits=10, decimal_places=2, blank=True)
-    taxa_cartao_credito = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    subtotal = models.DecimalField(max_digits=8, decimal_places=2, blank=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    taxa_cartao = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    troco = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    bairro = models.ForeignKey(Bairro, on_delete=models.CASCADE, null=True, related_name='bairro')
+    forma_pagamento = models.CharField(max_length=20, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pendente')
 
     def __str__(self):
-        return f'Pedido {self.id} - {self.user.nome}'
-
-
-class ItemPedido(models.Model):
-    pedido = models.ForeignKey(Pedido, related_name='itens', on_delete=models.CASCADE)
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
-    quantidade = models.PositiveIntegerField()
-
-    def __str__(self):
-        return f"{self.quantidade}x {self.produto.nome} (Pedido {self.pedido.id})"
- 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.pedido.calcular_total()
+        return f"Pedido #{self.id} - {self.user}"
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
