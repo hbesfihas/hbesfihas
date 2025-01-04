@@ -1,0 +1,139 @@
+let produtos = {}; // Armazena os produtos selecionados
+
+// Função para formatar valores como moeda brasileira
+function formatCurrency(value) {
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function addItem(button, produtoId, produtoPreco) {
+    const productCard = button.closest('.product-card');
+    const quantitySpan = productCard.querySelector('.quantity span');
+    const hiddenInput = productCard.querySelector('input[type="hidden"]');
+    let currentQuantity = parseInt(quantitySpan.innerText);
+
+    // Incrementa a quantidade
+    currentQuantity++;
+    quantitySpan.innerText = currentQuantity;
+    hiddenInput.value = currentQuantity;
+
+    // Exibe o contador se ainda estiver oculto
+    productCard.querySelector('.quantity').classList.remove('d-none');
+
+    // Atualiza o objeto de produtos
+    if (!produtos[produtoId]) {
+        produtos[produtoId] = { preco: parseFloat(produtoPreco), quantidade: 0, nome: productCard.querySelector('.product-name').innerText };
+    }
+    produtos[produtoId].quantidade = currentQuantity;
+
+    updateTotal();
+}
+
+function removeItem(button, produtoId) {
+    const productCard = button.closest('.product-card');
+    const quantitySpan = productCard.querySelector('.quantity span');
+    const hiddenInput = productCard.querySelector('input[type="hidden"]');
+    let currentQuantity = parseInt(quantitySpan.innerText);
+
+    // Decrementa a quantidade
+    currentQuantity = Math.max(0, currentQuantity - 1); // Evita valores negativos
+    quantitySpan.innerText = currentQuantity;
+    hiddenInput.value = currentQuantity;
+
+    // Esconde o contador se a quantidade for 0
+    if (currentQuantity === 0) {
+        productCard.querySelector('.quantity').classList.add('d-none');
+    }
+
+    // Atualiza o objeto de produtos
+    if (produtos[produtoId]) {
+        produtos[produtoId].quantidade = currentQuantity;
+        if (currentQuantity === 0) {
+            delete produtos[produtoId];
+        }
+    }
+
+    updateTotal();
+}
+
+function updateTotal() {
+    let subtotal = 0;
+    const itensLista = document.getElementById('itens-lista');
+    itensLista.innerHTML = ''; // Limpa a lista de itens
+
+    for (let produtoId in produtos) {
+        subtotal += produtos[produtoId].preco * produtos[produtoId].quantidade;
+
+        // Adiciona o item à lista de itens do pedido
+        const li = document.createElement('li');
+        li.innerText = `${produtos[produtoId].nome}: ${produtos[produtoId].quantidade}`;
+        itensLista.appendChild(li);
+    }
+
+    document.getElementById('subtotal-value').innerText = formatCurrency(subtotal);
+    document.getElementById('subtotal-hidden').value = subtotal.toFixed(2);
+
+    // Obtém a taxa de entrega do bairro selecionado
+    const bairroSelect = document.getElementById('bairro');
+    const selectedOption = bairroSelect.options[bairroSelect.selectedIndex];
+    const taxaEntregaStr = selectedOption ? selectedOption.getAttribute('data-taxa') : '0';
+    const taxaEntrega = parseFloat(taxaEntregaStr.replace(',', '.')) || 0;
+
+    // Atualiza a taxa de entrega na interface
+    document.getElementById('taxa-entrega').querySelector('.value').innerText = formatCurrency(taxaEntrega);
+
+    // Verifica a forma de pagamento
+    const formaPagamento = document.getElementById('forma_pagamento').value;
+    let acrescimo = 0;
+
+    // Exibição condicional para o campo de Acréscimo
+    const acrescimoDiv = document.getElementById('acrescimo');
+    if (formaPagamento === 'cartaocredito') {
+        acrescimo = subtotal * 0.05;
+        acrescimoDiv.classList.remove('d-none');
+        acrescimoDiv.querySelector('.value').innerText = formatCurrency(acrescimo);
+    } else {
+        acrescimoDiv.classList.add('d-none');
+    }
+
+    // Exibição condicional para o campo de Troco
+    const trocoDiv = document.getElementById('campo-troco');
+    if (formaPagamento === 'dinheiro') {
+        trocoDiv.classList.remove('d-none');
+    } else {
+        trocoDiv.classList.add('d-none');
+    }
+
+    // Calcula o total final
+    const total = subtotal + taxaEntrega + acrescimo;
+    document.getElementById('total-value').innerText = formatCurrency(total);
+    document.getElementById('form-total').value = total.toFixed(2);
+}
+
+function enviarPedido() {
+    const produtosEnviados = [];
+
+    // Captura os produtos e quantidades
+    for (let produtoId in produtos) {
+        if (produtos[produtoId].quantidade > 0) {
+            produtosEnviados.push({ nome: produtos[produtoId].nome, quantidade: produtos[produtoId].quantidade });
+        }
+    }
+
+    // Verifica se há pelo menos um produto selecionado
+    if (produtosEnviados.length === 0) {
+        alert("Selecione pelo menos um produto para finalizar o pedido.");
+        return;
+    }
+
+    // Preenche os campos ocultos com os valores corretos
+    document.getElementById('form-produtos').value = JSON.stringify(produtosEnviados);
+    document.getElementById('form-endereco').value = document.getElementById('endereco').value.trim();
+    document.getElementById('form-subtotal').value = document.getElementById('subtotal-hidden').value.trim();
+    document.getElementById('form-taxa-entrega').value = document.getElementById('taxa-entrega').querySelector('.value').innerText.replace('R$', '').replace('.', '').replace(',', '.').trim();
+    document.getElementById('form-troco').value = document.getElementById('troco').value.trim();
+    document.getElementById('form-bairro').value = document.getElementById('bairro').value.trim();
+    document.getElementById('form-pagamento').value = document.getElementById('forma_pagamento').value.trim();
+
+    // Submete o formulário
+    document.getElementById('pedido-form').submit();
+}

@@ -46,6 +46,8 @@
     border-radius: 8px; /* Bordas arredondadas */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sombra leve */
     transition: transform 0.2s, box-shadow 0.2s; 
+    background: linear-gradient(to right, rgba(26, 35, 126, 0.5), rgba(211, 47, 47, 0.5)); color: rgb(199, 199, 199);
+
 }
 
 hr {
@@ -102,4 +104,127 @@ hr {
 }
 .hidden{
     display: none;
+}
+.summary-container {
+    background-color: #eeeeee; /* Fundo leve para contraste */
+    border: 1px solid #a0a0a0; /* Borda suave */
+    max-width: 400px;
+    margin: 0 auto; /* Centraliza a div */
+}
+
+.summary-item {
+    font-size: 1rem; /* Tamanho maior para texto */
+    padding: 10px 0; /* Espaçamento interno */
+    border-bottom: 1px solid #c4c4c4; /* Linha divisória */
+    text-align:justify;
+}
+.summary-item-primeiro {
+    font-size: 1rem; /* Tamanho maior para texto */
+    padding: 10px 0; /* Espaçamento interno */
+    border-bottom: 1px solid #c4c4c4; /* Linha divisória */
+    text-align:center;
+    
+}
+
+.summary-item:last-child {
+    border-bottom: none; /* Remove a borda inferior do último item */
+}
+
+.summary-item.total {
+    font-weight: bold;
+    color: #28a745; /* Verde para destacar o total */
+}
+
+.summary-container .value {
+    float: right; /* Alinha os valores à direita */
+}
+
+#campo-troco {
+    margin-top: 1rem;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+}
+
+li {
+    list-style: none;
+    text-align: end;
+
+}
+
+.pedidos {
+    display: flex;
+    text-align: left;
+}
+
+.itens-pedidos{
+    display: flex;
+    text-align: left;
+    padding-left: 10px;
+}
+
+.text-warning { color: orange; }
+.text-success { color: green; }
+.text-info { color: blue; }
+
+.card-header{
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    align-content: center;
+}
+.d-flex{
+    display: flex;
+
+}
+.status{
+    align-self: center;
+
+}
+.vidro{
+    display: inline-block;
+    padding: 10px 20px; /* Espaçamento interno */
+    background: rgba(255, 255, 255, 0.3); /* Fundo translúcido */
+    color: #000; /* Cor do texto */
+    text-decoration: none; /* Remove o sublinhado */
+    border-radius: 8px; /* Bordas arredondadas */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sombra leve */
+    transition: transform 0.2s, box-shadow 0.2s; 
+}
+.id-pedido{
+    display: inline-table;
+    align-items: center;
+    border: 1px solid black;
+    border-radius: 10px;
+    padding: 5px;
+}
+.status-container {
+    text-align: center; /* Centraliza o GIF */
+    margin: 10px 0;
+}
+
+.status-gif {
+    width: 70px; /* Tamanho do GIF */
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+.status-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 10px;
+    position: relative;
+}
+
+/* Barra de preenchimento */
+.status-bar-fill {
+    height: 100%;
+    width: 0;
+    background-color: #4caf50; /* Cor de preenchimento */
+    transition: width 5.0s linear;
 }

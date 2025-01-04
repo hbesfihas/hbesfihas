@@ -1,12 +1,12 @@
 from django.contrib import admin
-from .models import Produto, Pedido, Bairro, User, ItemPedido
+from .models import Produto, Pedido, Bairro, User, Itens
 from django.utils.html import format_html
 
 admin.site.register(Produto),
 admin.site.register(Pedido),
 admin.site.register(User),
 admin.site.register(Bairro),
-admin.site.register(ItemPedido),
+admin.site.register(Itens),
 
 class ProdutoAdmin(admin.ModelAdmin):
     list_display = ('nome', 'descricao', 'preco','thumbnail',)  # Colunas que aparecerão na lista de sabores
@@ -25,9 +25,9 @@ class ProdutoAdmin(admin.ModelAdmin):
     thumbnail.short_description = "Imagem"
 
 class PedidoAdmin(admin.ModelAdmin):
-    list_display = ('cliente', 'bairro', 'valor_total', 'criado_em')  # Colunas que aparecerão na lista de sabores
-    search_fields = ('cliente','criado_em')  # Permitindo a busca por nome ou descrição
-    list_filter = ('cliente','bairro', 'valor_total', 'criado_em')  # Permitindo filtros no admin (ex: filtro por nome)
+    list_display = ('id', 'user', 'status', 'criado_em', 'atualizado_em')  # Colunas que aparecerão na lista de sabores
+    search_fields = ('user__username', 'endereco')  # Permitindo a busca por nome ou descrição
+    list_filter = ('status', 'criado_em')  # Permitindo filtros no admin (ex: filtro por nome)
 
 class BairroAdmin(admin.ModelAdmin):
     list_display = ('')

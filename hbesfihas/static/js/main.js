@@ -1,5 +1,5 @@
-let subtotal = 0; // Subtotal inicial
-let taxaEntrega = 0; // Taxa de entrega inicial
+let produtos = {}; // Objeto para armazenar produtos e suas quantidades
+let subtotal = 0; // Inicializa o subtotal
 
 // Função para formatar valores como moeda brasileira
 function formatCurrency(value) {
@@ -8,131 +8,221 @@ function formatCurrency(value) {
         currency: 'BRL',
     }).format(value);
 }
-let produtos = {};
 
-function addItem(button) {
+function addItem(button, id) {
+    const quantitySpan = button.nextElementSibling;
+    const quantityValue = quantitySpan.querySelector('span');
     const productCard = button.closest('.product-card');
-    const quantitySpan = productCard.querySelector('.quantity span');
-    const hiddenInput = productCard.querySelector('input[type="hidden"]');
-    let currentQuantity = parseInt(quantitySpan.innerText);
+    const productPrice = parseFloat(
+        productCard.querySelector('.product-price').textContent.replace('R$', '').replace(',', '.').trim()
+    )
+
+    // Localiza o campo <input hidden> correspondente
+    const quantidadeInput = productCard.querySelector('input[type="hidden"]');
+
+    let currentQuantity = parseInt(quantityValue.innerText);
 
     // Incrementa a quantidade
     currentQuantity++;
-    quantitySpan.innerText = currentQuantity;
-    hiddenInput.value = currentQuantity;
+    quantityValue.innerText = currentQuantity;
 
-    // Exibe o contador se ainda estiver oculto
-    productCard.querySelector('.quantity').classList.remove('d-none');
-    console.log(`Adicionado: ${productCard.querySelector('.product-name').innerText} - Quantidade: ${currentQuantity}`);
+    // Atualiza o valor do <input hidden>
+    quantidadeInput.value = currentQuantity;
+
+    // Exibe o contador e o botão de "-" se ainda não estiver visível
+    quantitySpan.classList.remove('d-none');
+
+    // Atualiza o objeto produtos
+    if (!produtos[id]) {
+        produtos[id] = { quantidade: quantidadeInput, preco: productPrice, nome: productCard.querySelector('.product-name').innerText };
+    }
+    produtos[id].quantidade = currentQuantity;
+
+    // Atualiza o subtotal
+    subtotal += productPrice;
+    updateSubtotal();
+    updateTotal();
 }
 
-function removeItem(button) {
+function removeItem(button, id) {
+    const quantitySpan = button.parentElement;
+    const quantityValue = quantitySpan.querySelector('span');
     const productCard = button.closest('.product-card');
-    const quantitySpan = productCard.querySelector('.quantity span');
-    const hiddenInput = productCard.querySelector('input[type="hidden"]');
-    let currentQuantity = parseInt(quantitySpan.innerText);
+    const productPrice = parseFloat(
+        productCard.querySelector('.product-price').textContent.replace('R$', '').replace(',', '.').trim()
+    )
+    // Localiza o campo <input hidden> correspondente
+    const quantidadeInput = productCard.querySelector('input[type="hidden"]');
+
+    let currentQuantity = parseInt(quantityValue.innerText);
 
     // Decrementa a quantidade
-    currentQuantity = Math.max(0, currentQuantity - 1); // Evita valores negativos
-    quantitySpan.innerText = currentQuantity;
-    hiddenInput.value = currentQuantity;
+    if (currentQuantity > 0) {
+        currentQuantity--;
+        quantityValue.innerText = currentQuantity;
 
-    // Esconde o contador se a quantidade for 0
-    if (currentQuantity === 0) {
-        productCard.querySelector('.quantity').classList.add('d-none');
-    }
-    console.log(`Removido: ${productCard.querySelector('.product-name').innerText} - Quantidade: ${currentQuantity}`);
-}
+        // Atualiza o valor do <input hidden>
+        quantidadeInput.value = currentQuantity;
 
-function enviarPedido() {
-    const produtos = [];
-
-    // Captura os produtos e quantidades
-    document.querySelectorAll('.product-card').forEach(card => {
-        const nome = card.querySelector('.product-name').innerText.trim(); // Nome do produto
-        const quantidade = parseInt(card.querySelector('input[type="hidden"]').value); // Quantidade selecionada
-
-        if (quantidade > 0) {
-            produtos.push({ nome, quantidade });
+        // Esconde o contador e o botão de "-" se a quantidade chegar a 0
+        if (currentQuantity === 0) {
+            quantitySpan.classList.add('d-none');
+            delete produtos[id]; // Remove o produto do objeto se a quantidade for 0
+        } else {
+            produtos[id].quantidade = currentQuantity; // Atualiza a quantidade no objeto
         }
-    });
 
-    // Verifica se há pelo menos um produto selecionado
-    if (produtos.length === 0) {
-        alert("Selecione pelo menos um produto para finalizar o pedido.");
-        return;
+        if (!produtos[id]) {
+            produtos[id] = { quantidade: quantidadeInput, preco: productPrice, nome: productCard.querySelector('.product-name').innerText };
+        }
+        produtos[id].quantidade = currentQuantity;
+
+        // Atualiza o subtotal
+        subtotal -= productPrice;
+        updateSubtotal();
+        updateTotal();
     }
-
-    console.log("Produtos enviados:", produtos);
-
-    // Preenche os campos ocultos com os valores corretos
-    document.getElementById('form-produtos').value = JSON.stringify(produtos);
-    document.getElementById('form-endereco').value = document.getElementById('endereco').value.trim();
-    document.getElementById('form-subtotal').value = document.getElementById('subtotal-value').value.trim();
-    document.getElementById('form-total').value = document.getElementById('total').innerText.replace('R$', '').replace(',', '.').trim();
-    document.getElementById('form-taxa-entrega').value = document.getElementById('taxa-entrega').innerText.replace('R$', '').replace(',', '.').trim();
-    document.getElementById('form-troco').value = document.getElementById('troco').value.trim();
-    document.getElementById('form-bairro').value = document.getElementById('bairro').value.trim();
-    document.getElementById('form-pagamento').value = document.getElementById('forma_pagamento').value.trim();
-
-    // Submete o formulário
-    document.getElementById('pedido-form').submit();
 }
-
 
 function updateSubtotal() {
     // Atualiza o subtotal na interface
-    document.getElementById('subtotal').innerHTML = `<strong>Subtotal: ${formatCurrency(subtotal)}</strong>`;
+    document.getElementById('subtotal-value').innerText = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+    document.getElementById('subtotal-hidden').value = subtotal.toFixed(2).replace('.', ',');
 }
 
 function updateTotal() {
-    // Obtém o elemento select de bairros
     const bairroSelect = document.getElementById('bairro');
     const selectedOption = bairroSelect.options[bairroSelect.selectedIndex];
+    const taxaEntregaStr = selectedOption ? selectedOption.getAttribute('data-taxa') : '0';
+    const taxaEntrega = parseFloat(taxaEntregaStr) || 0;
 
-    // Garante que há um bairro selecionado antes de prosseguir
-    if (!selectedOption || selectedOption.value === "") {
-        taxaEntrega = 0;
-    } else {
-        // Obtém a taxa de entrega do atributo data-taxa e converte para float
-        taxaEntrega = parseFloat(selectedOption.getAttribute('data-taxa').replace(',', '.')) || 0;
-    }
 
-    // Atualiza a taxa de entrega na interface
-    document.getElementById('taxa-entrega').innerHTML = `<strong>Taxa de Entrega: ${formatCurrency(taxaEntrega)}</strong>`;
+    // Atualiza a taxa de entrega no DOM
+    document.getElementById('taxa-entrega').querySelector('.value').innerText = `R$ ${taxaEntrega.toFixed(2).replace('.', ',')}`;
 
-    // Verifica a forma de pagamento
-    const pagamentoSelect = document.getElementById('forma_pagamento');
-    const formaPagamento = pagamentoSelect.value;
-    
-    // Calcula o total
-    let total = subtotal + taxaEntrega;
-   
-    // Exibição condicional para o campo de Acréscimo
-    const acrescimoDiv = document.getElementById('acrescimo');
+    // Calcula o acréscimo (5% para cartão de crédito)
+    const formaPagamento = document.getElementById('forma_pagamento').value;
     let acrescimo = 0;
-
+    const acrescimoDiv = document.getElementById('acrescimo-value');
     if (formaPagamento === 'cartaocredito') {
-        acrescimo = total * 0.05;
-        acrescimoDiv.innerHTML = `<strong>Taxa cartão de Crédito (5%): ${formatCurrency(acrescimo)}</strong>`;
+        acrescimo = subtotal * 0.05; // 5% de acréscimo
         acrescimoDiv.classList.remove('d-none');
+        acrescimoDiv.querySelector('.value').innerText = acrescimo.toFixed(2).replace('.', ',');
     } else {
         acrescimoDiv.classList.add('d-none');
     }
 
-     // Exibição condicional para o campo de Troco
-     const trocoDiv = document.getElementById('campo-troco');
-     if (formaPagamento === 'dinheiro') {
-         trocoDiv.classList.remove('d-none');
-     } else {
-         trocoDiv.classList.add('d-none');
-     }
- 
-     // Calcula o total final
-     total += acrescimo;
-
-    // Atualiza o total na interface
-    document.getElementById('total').innerHTML = `<strong>Total: ${formatCurrency(total)}</strong>`;
-
+    // Ex ibição condicional do campo de Troco
+    const trocoDiv = document.getElementById('campo-troco');
+    if (formaPagamento === 'dinheiro') {
+        trocoDiv.classList.remove('d-none');
+    } else {
+        trocoDiv.classList.add('d-none');
+    }
+    updateItensPedido();
+    // Calcula o total final
+    const total = subtotal + taxaEntrega + acrescimo;
+    document.getElementById('total-value').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+    document.getElementById('form-total').value = total.toFixed(2).replace('.', ',');
 }
 
+// Adiciona um listener para mostrar o campo de troco se a forma de pagamento for dinheiro
+document.getElementById('forma_pagamento').addEventListener('change', function () {
+    const trocoField = document.getElementById('campo-troco');
+    if (this.value === 'dinheiro') {
+        trocoField.classList.remove('d-none');
+    } else {
+        trocoField.classList.add('d-none');
+    }
+});
+
+function updateItensPedido() {
+    const itensLista = document.getElementById('itens-lista');
+    itensLista.innerHTML = ''; // Limpa a lista de itens
+
+    for (const produtoId in produtos) {
+        const produto = produtos[produtoId];
+        const li = document.createElement('li');
+        li.innerText = `${produto.nome}: ${produto.quantidade}`;
+        itensLista.appendChild(li);
+    }
+}
+
+function enviarPedido() {
+    const bairroPedido = document.getElementById("bairro").value; 
+    const formaPagamento = document.querySelector("#forma_pagamento").value;
+    const enderecoPedido = document.querySelector("#endereco").value;
+    const trocoPedido = parseFloat(document.querySelector("#troco")?.value || null);
+    const subtotalPedido = parseFloat(document.querySelector("#subtotal-value").textContent.replace("R$", "").replace(",", ".").trim());
+    const totalPedido = parseFloat(document.querySelector("#total-value").textContent.replace("R$", "").replace(",", ".").trim());
+    const itensPedidoData = document.getElementById("itens-pedido").textContent.trim();
+    const itensPedido = itensPedidoData.replace(/^\s+|\s+$/gm, '').replace(/([a-zA-Záéíóúçãêô ]+):/g, '\n$1:').replace(/^\n/, '');;
+    const taxaEntregaPedido = parseFloat(document.querySelector("#taxa-entrega .value").textContent.trim().replace("R$", "").replace(",","."));
+    const acrescimoPedido = parseFloat(document.querySelector('#acrescimo-value .value').textContent.trim().replace("R$", "").replace(",","."));
+    
+     
+    const pedido = {
+        endereco: enderecoPedido,
+        itens: itensPedido, 
+        subtotal: subtotalPedido,
+        total: totalPedido,
+        taxa_entrega: taxaEntregaPedido,
+        taxa_cartao: acrescimoPedido,
+        troco: trocoPedido,
+        bairro: bairroPedido,
+        forma_pagamento: formaPagamento,
+    }
+   
+
+    // Verifica se o bairro está preenchido
+    if (!bairro.value) {
+        alert('Por favor, selecione um bairro.');
+        bairro.focus();
+        return;
+    }
+
+    //  Verifica se o endereço está preenchido
+    if (!endereco.value.trim()) {
+        alert('Por favor, preencha o campo de endereço.');
+        endereco.focus();
+        return;
+    }
+
+    //  Verifica se a forma de pagamento está preenchida
+    if (!formaPagamento) {
+        alert('Por favor, selecione uma forma de pagamento.');
+        document.getElementById('forma_pagamento').focus();
+        return;
+    }
+
+    // Verifica o campo de troco, se necessário
+    if (formaPagamento.value === 'dinheiro' && (!troco.value || parseFloat(troco.value) <= 0)) {
+        alert('Por favor, informe o valor para troco.');
+        troco.focus();
+        return;
+    }
+     // Enviar o pedido via fetch
+     fetch('/criar_pedido/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value  // Se CSRF estiver ativo
+        },
+        body: JSON.stringify(pedido)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(`Pedido realizado com sucesso! ID do pedido: ${data.pedido_id}`);
+            window.location.href = data.redirect_url;
+        } else {
+            alert('Erro ao criar o pedido: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao enviar o pedido.');
+    });
+    // Submeter o formulário 
+
+}

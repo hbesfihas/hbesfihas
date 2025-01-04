@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<div class="card" style="width: 18rem;">
+    <img class="card-img-top" src="{% static 'imagens/logo.jpg'%}" alt="Imagem de capa do card">
+    <div class="card-body">
+      <h5 class="card-title">Chamar no WhatsApp</h5>
+      <a href="https://wa.me/5563981216616" class="btn btn-success">Chamar</a>
+    </div>
+  </div>
+{% endblock %}

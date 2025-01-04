@@ -66,6 +66,7 @@
     </style>
 </head>
 <body>
+    {% csrf_token %}
     <div class="glass-card">
         <!-- Logo -->
         <img src="{% static 'imagens/logo.jpg' %}" alt="HB Esfihas" class="logo">

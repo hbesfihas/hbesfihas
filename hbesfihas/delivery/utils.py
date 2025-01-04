@@ -28,3 +28,16 @@ def gerar_pix_qrcode(chave_pix, nome_recebedor, cidade, valor, descricao):
     img = qr.make_image(fill='black', back_color='white')
 
     return img
+
+def gerar_pix_copiaecola(chave_pix, nome_recebedor, cidade, valor, descricao):
+    # Cria o payload Pix
+    pix = Pix(
+        chave=chave_pix,
+        nome_recebedor=nome_recebedor,
+        cidade=cidade,
+        valor=valor,
+        descricao=descricao
+    )
+
+    # Retorna o código de "Copia e Cola"
+    return pix.payload()
