@@ -96,8 +96,20 @@ class Pedido(models.Model):
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pendente')
 
     def __str__(self):
-        return f"Pedido #{self.id} - {self.user}"
+        return f'Pedido {self.id} - {self.user.nome}'
 
+
+class ItemPedido(models.Model):
+    pedido = models.ForeignKey(Pedido, related_name='itens', on_delete=models.CASCADE)
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
+    quantidade = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"{self.quantidade}x {self.produto.nome} (Pedido {self.pedido.id})"
+ 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.pedido.calcular_total()
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
