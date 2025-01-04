@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 
+# tirar isso aqui \/
+APPEND_SLASH=False
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,7 +28,7 @@ SECRET_KEY = "django-insecure-*rlz)+az&=yqg#vve&ga_wu5gj%_*g4bu*#dmx7*!o7zw@$5=u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1','localhost','hbesfihas.com.br', 'www.hbesfihas.com.br']
+ALLOWED_HOSTS = ['127.0.0.1','localhost','192.168.0.107']
 
 
 # Application definition
@@ -78,12 +80,8 @@ WSGI_APPLICATION = "hbesfihas.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "hbesfihas",
-        "USER": "root",
-        "PASSWORD": "Apple94Br#192168",
-        "HOST": "localhost",
-        "PORT": "3306",
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "dbsqlite3",
     }
 }
 
@@ -112,11 +110,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "pt-br"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "America/Sao_Paulo"
 
 USE_I18N = True
 
 USE_TZ = True
+
 
 
 # Static files (CSS, JavaScript, Images)
@@ -144,3 +143,5 @@ CSRF_TRUSTED_ORIGINS = [
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+AUTH_USER_MODEL = 'delivery.User'

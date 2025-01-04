@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HB Esfihas</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <!-- Arquivo CSS personalizado -->
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg" style="background: linear-gradient(to right, rgba(26, 35, 126, 0.5), rgba(211, 47, 47, 0.5)); color: rgb(199, 199, 199);">
+        <div class="container-fluid">
+            <!-- Logo -->
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="{% static 'imagens/logo.jpg' %}" alt="Logo" width="40" height="40" class="rounded-circle me-2">
+                <span>HB Esfihas</span>
+            </a>
+            <div class="d-flex justify-content-center flex-grow-1">
+                <span class="fw-bold border border-dark p-2 rounded saudacao-borda">Bem-vindo, {{ user.nome }}</span>
+            </div>
+
+          
+                <!-- Botão para menu colapsado (em telas pequenas) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- Links do menu -->
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item-custom glass">
+                        <a class="nav-link active" href="#">Home</a>
+                    </li>
+                    <li class="nav-item-custom glass">
+                        <a class="nav-link" href="#cardapio">Cardápio</a>
+                    </li>
+                    <li class="nav-item-custom glass">
+                        <a class="nav-link" href="#contato">Contato</a>
+                    </li>
+                      <!-- Botão de Logout -->
+                    <li>
+                         <a href="{% url 'login' %}" class="btn btn-danger w-100 ">Sair</a>
+                    </li>
+                     
+                </ul>
+            </div>
+        </div>
+    </nav>
+<hr>
+<main>
+    {% block content %}{% endblock %}
+</main>
+<hr>
+<footer>
+    <div class="text-center">
+        <p> &copy; 2025 HB Esfihas</p>
+    </div>
+    
+</footer>
+
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- JavaScript para controlar os botões -->
+<script src="{% static 'js/main.js' %}"></script>
+
+
+</body>
+</html>
