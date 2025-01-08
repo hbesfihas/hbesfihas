@@ -10,7 +10,8 @@ function formatCurrency(value) {
 }
 
 function addItem(button, id) {
-    const quantitySpan = button.nextElementSibling;
+    
+    const quantitySpan = button.previousElementSibling;
     const quantityValue = quantitySpan.querySelector('span');
     const productCard = button.closest('.product-card');
     const productPrice = parseFloat(
@@ -30,6 +31,7 @@ function addItem(button, id) {
     quantidadeInput.value = currentQuantity;
 
     // Exibe o contador e o botão de "-" se ainda não estiver visível
+    
     quantitySpan.classList.remove('d-none');
 
     // Atualiza o objeto produtos
@@ -226,3 +228,29 @@ function enviarPedido() {
     // Submeter o formulário 
 
 }
+
+
+function alterarStatus(pedidoId, novoStatus) {
+    fetch(`/alterar_status/${pedidoId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ status: novoStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Status alterado: ' + novoStatus);
+            location.reload();
+        } else {
+            alert('Erro ao alterar status: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao alterar status.');
+    });
+}
+

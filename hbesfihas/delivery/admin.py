@@ -1,12 +1,12 @@
 from django.contrib import admin
-from .models import Produto, Pedido, Bairro, User, Itens
+from .models import Produto, Pedido, Bairro, User
 from django.utils.html import format_html
 
 admin.site.register(Produto),
 admin.site.register(Pedido),
 admin.site.register(User),
 admin.site.register(Bairro),
-admin.site.register(Itens),
+
 
 class ProdutoAdmin(admin.ModelAdmin):
     list_display = ('nome', 'descricao', 'preco','thumbnail',)  # Colunas que aparecerão na lista de sabores

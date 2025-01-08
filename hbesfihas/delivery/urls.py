@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth.views import LogoutView
-from . views import gerar_pix_qrcode_view, criar_pedido
+from . views import criar_pedido, gerencia, gerar_pix, alterar_status
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -9,6 +9,10 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(next_page='/login/'), name='logout'),
     path('criar_pedido/', views.criar_pedido, name='criar_pedido'),
     path('pedidos/', views.pedidos, name='pedidos'),
-    path('gerar_pix_qrcode/', gerar_pix_qrcode_view, name='gerar_pix_qrcode'),
-    path('contato', views.contato, name='contato')
+    path('gerencia/', gerencia, name='gerencia'),
+    path('contato', views.contato, name='contato'),
+    path('gerar_pix', views.gerar_pix, name='gerar_pix'),
+    path('alterar_status/<int:pedido_id>/', views.alterar_status, name='alterar_status'),
+    path('atualizar_pedidos/', views.atualizar_pedidos, name='atualizar_pedidos'),
+
 ]

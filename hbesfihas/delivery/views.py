@@ -1,14 +1,15 @@
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse
 from .models import User, Produto, Bairro, Pedido
 from django.contrib.auth import login
 from .forms import EntradaForm
+from django.utils.timezone import localdate
 import json
-from .utils import gerar_pix_qrcode, gerar_pix_copiaecola
-from django.views.decorators.csrf import csrf_exempt
-
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from django.core.paginator import Paginator
 def home(request):
     user = request.user
     if request.user.is_authenticated:
@@ -54,7 +55,12 @@ def pedidos(request):
     if not request.user.is_authenticated:
         return redirect('login')  # Redireciona para a página de login, se o usuário não estiver autenticado
     
-    pedidos = Pedido.objects.filter(user=request.user).order_by('-criado_em')  # Filtra os pedidos do usuário autenticado
+    pedidos_list = Pedido.objects.filter(user=request.user).order_by('-criado_em')  # Filtra os pedidos do usuário autenticado
+    
+    paginator = Paginator(pedidos_list, 5)
+    page_number = request.GET.get('page')
+    pedidos = paginator.get_page(page_number)
+    
     return render(request, 'pedidos.html', {'pedidos': pedidos})
 
 def limpar_valor(valor_str):
@@ -66,24 +72,7 @@ def limpar_valor(valor_str):
         return 0.0
 
 
-def gerar_pix_qrcode_view(request):
-    chave_pix = "63981216616"
-    nome_recebedor = "HB Esfihas"
-    cidade = "Pedro Afonso"
-    valor = criar_pedido.total  # Valor da transação
-    descricao = "Descrição do pagamento"
-
-    # Gera o QR Code
-    img = gerar_pix_qrcode(chave_pix, nome_recebedor, cidade, valor, descricao)
-    codigo_pix = gerar_pix_copiaecola(chave_pix, nome_recebedor, cidade, valor, descricao)
-    # Retorna a imagem como resposta HTTP
-    response = HttpResponse(content_type="image/png")
-    img.save(response, "PNG")
-    return response, JsonResponse({"codigo_pix": codigo_pix})
-
-# @login_required
-
-@csrf_exempt
+@login_required
 def criar_pedido(request):
     if request.method == 'POST':
         data = json.loads(request.body)  # Recebe os dados enviados do frontend
@@ -118,14 +107,51 @@ def criar_pedido(request):
 def contato(request):
     return render(request, 'contato.html')
 
-def atualizar_status(request, pedido_id):
+def gerar_pix(request):
+    pass
+
+@user_passes_test(lambda u: u.is_staff, login_url='/login/')
+def gerencia(request):
     if request.method == 'POST':
-        pedido = get_object_or_404(Pedido, id=pedido_id)
+        # Atualizar o status do pedido
+        pedido_id = request.POST.get('pedido_id')
         novo_status = request.POST.get('status')
-        if novo_status in dict(Pedido.STATUS_CHOICES).keys():
+        pedido = get_object_or_404(Pedido, id=pedido_id)
+        pedido.status = novo_status
+        pedido.save()
+        
+        return JsonResponse({'status': 'success', 'message': 'Status atualizado com sucesso!'})
+    pedidos = Pedido.objects.all().order_by('-id')
+    return render(request, 'gerencia.html', {'pedidos': pedidos})
+
+def alterar_status(request, pedido_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            novo_status = data.get('status')
+            pedido = Pedido.objects.get(id=pedido_id)
             pedido.status = novo_status
             pedido.save()
-            return JsonResponse ({'status': 'success', 'message': 'Status atualizado com sucesso'})
-        else:
-            return JsonResponse ({'status': 'error', 'message': 'Status inválido'})
-    return JsonResponse({'status': 'error', 'message': 'Método não permitido'})
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "pedidos",
+                {
+                    'type':'pedido_status_update',
+                    'status': novo_status,
+                    'pedido_id': pedido_id,
+                }
+            )
+            return JsonResponse({'status': 'success'}, status=200)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Método não permitido'}, status=405)
+
+@login_required
+def atualizar_pedidos(request):
+    pedidos = Pedido.objects.filter(user=request.user).order_by('-id')  # Ordena pelos mais recentes
+    return render(request, 'pedidos_lista_parcial.html', {'pedidos': pedidos})
+
+def filtrar_pedidos(request):
+    
+    return render(request, 'gerencia.html')

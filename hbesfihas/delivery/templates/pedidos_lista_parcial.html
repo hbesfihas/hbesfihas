@@ -1,0 +1,37 @@
+{% load static %}
+{% for pedido in pedidos %}
+<div class="card bg-light mb-3" style="max-width: 25rem;">
+    <li>
+        <div class="card-header itens-pedidos">
+            <div class="id-pedido">
+                <strong>ID do Pedido:</strong> {{ pedido.id }} 
+            </div>
+            <div class="
+                {% if pedido.status == 'pendente' %}text-warning
+                {% elif pedido.status == 'entregue' %}text-success
+                {% else %}text-info{% endif %} vidro"> 
+                <strong> Status: </strong>{{ pedido.get_status_display }}
+            </div>
+            <div class="status-container">
+                {% if pedido.status == 'em_preparo' %}
+                    <img src="{% static 'imagens/cozinhando.webp'%}" class="status-gif" />
+                {% elif pedido.status == 'pendente' %}
+                    <img src="{% static 'imagens/pendente.webp'%}" alt="Pendente" class="status-gif">
+                {% elif pedido.status == 'entregue' %}
+                    <img src="{% static 'imagens/entregue.webp'%}" alt="Entregue" class="status-gif">
+                {% elif pedido.status == 'a_caminho' %}
+                    <img src="{% static 'imagens/a_caminho.webp'%}" alt="A Caminho" class="status-gif">
+                {% endif %}
+            </div>
+        </div><br>
+        <div class="itens-pedidos"><strong>Cliente: </strong> {{ pedido.user }} </div><br>
+        <div class="itens-pedidos"><strong>Endereço: </strong> {{ pedido.endereco }} </div><br>
+        <div class="itens-pedidos"><strong>Itens: </strong> {{ pedido.itens|linebreaksbr }} </div><br>
+        <div class="itens-pedidos"><strong>Subtotal: </strong> R$ {{ pedido.subtotal }} </div><br>
+        <div class="itens-pedidos"><strong>Total: </strong> R$ {{ pedido.total }} </div><br>
+        <div class="itens-pedidos"><strong>Taxa de Entrega: </strong> R$ {{ pedido.taxa_entrega }} </div><br>
+        <div class="itens-pedidos"><strong>Forma de Pagamento: </strong> {{ pedido.forma_pagamento }} </div><br>
+        <div class="itens-pedidos"><strong>Criado em: </strong> {{ pedido.criado_em|date:"d/m/Y H:i" }} </div><br>
+    </li>
+</div>
+{% endfor %}

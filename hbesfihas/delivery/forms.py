@@ -1,5 +1,5 @@
 from django import forms
-from .models import Pedido, Itens
+from .models import Pedido
 
 class EntradaForm(forms.Form):
     nome = forms.CharField(

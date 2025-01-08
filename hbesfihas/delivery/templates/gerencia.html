@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% load static %}
+{% csrf_token %}
+
+
+
+
+<div class="container d-flex justify-content-center">
+    <h1>Gerenciamento de Pedidos</h1>
+</div>
+
+<div class="container">
+    <!-- Abas -->
+    <ul class="nav nav-tabs" id="pedidoTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="pendentes-tab" data-bs-toggle="tab" href="#pendentes" role="tab" aria-controls="pendentes" aria-selected="true">Pendentes</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="em-preparo-tab" data-bs-toggle="tab" href="#em-preparo" role="tab" aria-controls="em-preparo" aria-selected="false">Em Preparo</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="pronto-tab" data-bs-toggle="tab" href="#pronto" role="tab" aria-controls="pronto" aria-selected="false">Pronto</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="enviados-tab" data-bs-toggle="tab" href="#enviados" role="tab" aria-controls="enviados" aria-selected="false">Enviados</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="finalizados-tab" data-bs-toggle="tab" href="#finalizados" role="tab" aria-controls="finalizados" aria-selected="false">Finalizados</a>
+        </li>
+    </ul>
+
+    <!-- Conteúdo das abas -->
+    <div class="tab-content" id="pedidoTabContent">
+        <!-- Pendentes -->
+        <div class="tab-pane fade show active" id="pendentes" role="tabpanel" aria-labelledby="pendentes-tab">
+            {% for pedido in pedidos %}
+            {% if pedido.status == 'pendente' %}
+            
+            <div class="card bg-light mb-3" style="max-width: 25rem;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div><strong>ID do Pedido:</strong> {{ pedido.id }}</div>
+                    <div class="text-warning"><strong>Status:</strong> {{ pedido.get_status_display }}</div>
+                </div>
+                <div class="card-body">
+                    <div><strong>Data: </strong> {{ pedido.criado_em}}</div>
+                    <div><strong>Cliente:</strong> {{ pedido.user }}</div>
+                    <div><strong>Endereço:</strong> {{ pedido.endereco }}</div>
+                    <div><strong>Itens:</strong> 
+                        <textarea class="form-control" rows="10">{{ pedido.itens }}</textarea>
+                    </div>
+                    <div><strong>Subtotal:</strong> R$ {{ pedido.subtotal }}</div>
+                    <div><strong>Total:</strong>
+                        <input type="text" class="form-control" value="R$ {{ pedido.total }}">
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end">
+                    <button class="btn btn-success me-2" onclick="alterarStatus({{ pedido.id }}, 'em_preparo')">Aceitar</button>
+                    <button class="btn btn-danger me-2" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
+                    <button class="btn btn-secondary" onclick="imprimirPedido({{ pedido.id }})">Imprimir</button>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Em Preparo -->
+        <div class="tab-pane fade" id="em-preparo" role="tabpanel" aria-labelledby="em-preparo-tab">
+            {% for pedido in pedidos %}
+            {% if pedido.status == 'em_preparo' %}
+            <div class="card bg-light mb-3" style="max-width: 25rem;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div><strong>ID do Pedido:</strong> {{ pedido.id }}</div>
+                    <div class="text-info"><strong>Status:</strong> {{ pedido.get_status_display }}</div>
+                </div>
+                <div class="card-body">
+                    <div><strong>Aceito em: </strong> {{ pedido.atualizado_em}}</div>
+          <div><strong>Cliente:</strong> {{ pedido.user }}</div>
+                    <div><strong>Endereço:</strong> {{ pedido.endereco }}</div>
+                    <div><strong>Itens:</strong> 
+                        <textarea class="form-control" rows="10">{{ pedido.itens }}</textarea>
+                    </div>
+                    <div><strong>Subtotal:</strong> R$ {{ pedido.subtotal }}</div>
+                    <div><strong>Total:</strong>
+                        <input type="text" class="form-control" value="R$ {{ pedido.total }}">
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end">
+                    <button class="btn btn-success me-2" onclick="alterarStatus({{ pedido.id }}, 'a_caminho')">Enviar</button>
+                    <button class="btn btn-secondary me-2" onClick="alterarStatus({{ pedido.id }}, 'pronto')"> Pronto</button>
+                    <button class="btn btn-danger me-2" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
+                    <button class="btn btn-secondary" onclick="imprimirPedido({{ pedido.id }})">Imprimir</button>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Enviados -->
+        <div class="tab-pane fade" id="enviados" role="tabpanel" aria-labelledby="enviados-tab">
+            {% for pedido in pedidos %}
+            {% if pedido.status == 'a_caminho' %}
+            <div class="card bg-light mb-3" style="max-width: 25rem;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div><strong>ID do Pedido:</strong> {{ pedido.id }}</div>
+                    <div class="text-primary"><strong>Status:</strong> {{ pedido.get_status_display }}</div>
+                </div>
+                <div class="card-body">
+                    <div><strong>Enviado :</strong> {{ pedido.atualizado_em}}</div>
+                    <div><strong>Cliente:</strong> {{ pedido.user }}</div>
+                    <div><strong>Endereço:</strong> {{ pedido.endereco }}</div>
+                    <div><strong>Itens:</strong> 
+                        <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea>
+                    </div>
+                    <div><strong>Subtotal:</strong> R$ {{ pedido.subtotal }}</div>
+                    <div><strong>Total:</strong>
+                        <input type="text" class="form-control" value="R$ {{ pedido.total }}" disabled>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end">
+                    <button class="btn btn-success me-2" onclick="alterarStatus({{ pedido.id }}, 'entregue')">Marcar como Entregue</button>
+                    <button class="btn btn-danger me-2" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
+                    <button class="btn btn-secondary" onclick="imprimirPedido({{ pedido.id }})">Imprimir</button>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Prontos -->
+        <div class="tab-pane fade" id="pronto" role="tabpanel" aria-labelledby="pronto-tab">
+            {% for pedido in pedidos %}
+            {% if pedido.status == 'pronto' %}
+            <div class="card bg-light mb-3" style="max-width: 25rem;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div><strong>ID do Pedido:</strong> {{ pedido.id }}</div>
+                    <div class="text-success"><strong>Status:</strong> {{ pedido.get_status_display }}</div>
+                </div>
+                <div class="card-body">
+                    <div><strong>Pronto em:</strong> {{ pedido.atualizado_em}}</div>
+                    <div><strong>Cliente:</strong> {{ pedido.user }}</div>
+                    <div><strong>Endereço:</strong> {{ pedido.endereco }}</div>
+                    <div><strong>Itens:</strong> 
+                        <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea>
+                    </div>
+                    <div><strong>Subtotal:</strong> R$ {{ pedido.subtotal }}</div>
+                    <div><strong>Total:</strong>
+                        <input type="text" class="form-control" value="R$ {{ pedido.total }}" disabled>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end">
+                    <button class="btn btn-success me-2" onclick="alterarStatus({{ pedido.id }},'entregue')">Entregar</button>
+                    <button class="btn btn-danger me-2" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
+                    <button class="btn btn-secondary" onclick="imprimirPedido({{ pedido.id }})">Imprimir</button>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        
+        <!-- Finalizados -->
+        <div class="tab-pane fade" id="finalizados" role="tabpanel" aria-labelledby="finalizados-tab">
+            {% for pedido in pedidos %}
+            {% if pedido.status == 'entregue' %}
+            <div class="card bg-light mb-3" style="max-width: 25rem;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div><strong>ID do Pedido:</strong> {{ pedido.id }}</div>
+                    <div class="text-success"><strong>Status:</strong> {{ pedido.get_status_display }}</div>
+                </div>
+                <div class="card-body">
+                    <div><strong>Entregue em:</strong> {{ pedido.atualizado_em}}</div>
+                    <div><strong>Cliente:</strong> {{ pedido.user }}</div>
+                    <div><strong>Endereço:</strong> {{ pedido.endereco }}</div>
+                    <div><strong>Itens:</strong> 
+                        <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea>
+                    </div>
+                    <div><strong>Subtotal:</strong> R$ {{ pedido.subtotal }}</div>
+                    <div><strong>Total:</strong>
+                        <input type="text" class="form-control" value="R$ {{ pedido.total }}" disabled>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end">
+                    <button class="btn btn-success me-2" onclick="alterarStatus({{ pedido.id }},'entregue')">Entregar</button>
+                    <button class="btn btn-danger me-2" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
+                    <button class="btn btn-secondary" onclick="imprimirPedido({{ pedido.id }})">Imprimir</button>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+  </div>
+</div>
+{% endblock %}

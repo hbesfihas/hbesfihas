@@ -41,9 +41,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "delivery",
-    "rest_framework",
+    "channels",
 ]
-
+ASGI_APPLICATION = 'hbesfihas.asgi.application'
+CHANNEL_LAYERS = {
+    "default": {
+    "BACKEND": "channels.layers.InMemoryChannelLayer",    
+    },
+}
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

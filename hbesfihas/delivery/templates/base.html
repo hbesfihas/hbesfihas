@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="{% static 'css/custom.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'imagens/favicon.ico' %}">
     <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
 </head>
 <body>
     <!-- Navbar -->
@@ -18,7 +20,7 @@
         <div class="container-fluid">
             <!-- Logo -->
             <a class="navbar-brand d-flex align-items-center" href="#">
-                <img href="{% url 'home' %}" src="{% static 'imagens/logo.jpg' %}" alt="Logo" width="40" height="40" class="rounded-circle me-2">
+                <img href="{% url 'home' %}" src="{% static 'imagens/logo.jpg' %}" alt="Logo" width="60px" height="60px" class="rounded-circle me-2">
             </a>
             <div class="d-flex justify-content-center flex-grow-1">
                 <span id="usuario" class="fw-bold border border-dark p-2 rounded saudacao-borda">Bem-vindo, {{ user.nome }}</span>
@@ -32,6 +34,14 @@
             <!-- Links do menu -->
             <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    {% if request.user.is_staff %}
+                    <li class="nav-item-custom glass">
+                        <a class="nav-link" href="{% url 'gerencia' %}">Gerencia</a>
+                    </li>
+                    <li class="nav-item-custom glass">
+                        <a class="nav-link" href="admin/">Admin Django</a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item-custom glass">
                         <a class="nav-link active" href="{% url 'home'%}">Home</a>
                     </li>
@@ -52,12 +62,19 @@
     </nav>
 <hr>
 <main>
+
     {% block content %}{% endblock %}
+
 </main>
 <hr>
 <footer>
     <div class="text-center">
-        <p> &copy; 2025 HB Esfihas</p>
+        
+        <p> ® 2025 HB Esfihas</p>
+
+
+        <hr>
+
     </div>
     
 </footer>

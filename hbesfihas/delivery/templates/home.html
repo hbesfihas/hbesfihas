@@ -1,12 +1,14 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load static %}
+{% csrf_token %}
+<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
 <div class="container mt-5">
     <h1 id="cardapio" class="text-center mb-4">Cardápio</h1>
     <div class="row">
         {% for produto in produtos %}
         <div class="col-md-4">
-            <div class="product-card text-center" data-id"{{ produto.id}}">
+            <div class="product-card card text-center" data-id"{{ produto.id}}">
                 {% csrf_token %}
                 <!-- Imagem do Produto -->
                 {% if produto.imagem %}
@@ -22,14 +24,17 @@
 
                 <!-- Preço do Produto -->
                 <div class="product-price">R$ {{ produto.preco|floatformat:2 }}</div>
-
+                <div class="detalhe"> (preço unitário) </div>
                 <!-- Botões de quantidade -->
-                <div class="mt-3">
-                    <button class="btn btn-success btn-sm add-btn" onclick="addItem(this, {{ produto.id }}, {{ produto.preco|floatformat:2 }})">+</button>
-                    <span class="quantity d-none">
-                        <span id="quantidade-{{ produto.id }}" class="mx-2 border rounded shadow">0</span>
+                <div class="mt-3 d-flex align-items-center justify-content-btween">
+                     <span class="quantity d-none">
                         <button class="btn btn-danger btn-sm" onclick="removeItem(this, {{ produto.id }})">-</button>
+
+                        <span id="quantidade-{{ produto.id }}" class="mx-2 border rounded shadow" style="display: inline-block; min-width: 40px; padding: 5px 10px; text-align: center; background-color: #ffffff; border: 1px solid #007bff; border-radius: 5px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); font-weight: bold; color: #000;">0</span>
+                    
                     </span>
+                    <button class="btn btn-success btn-sm add-btn" onclick="addItem(this, {{ produto.id }}, {{ produto.preco|floatformat:2 }})">+</button>
+                   
                     
                 </div>
                 <input type="hidden" name="quantidade_{{ produto.id }}" value="0" id="campo-quantidade-{{ produto.id }}"/>
@@ -59,44 +64,45 @@
   
 </div>
 <hr>
-<form id="pedido-form" method="post" action="{% url 'criar_pedido' %}">
-    {% csrf_token %}
-    <div class="mb-3">
-        <label for="bairro" class="form-label">Bairro</label>
-        <select name="bairro" id="bairro" class="form-select" onchange="updateTotal()" required>
-            <option value="" disabled selected>Selecione um bairro</option>
-            {% for bairro in bairros %}
-                <option value="{{ bairro.id }}" data-taxa="{{ bairro.taxa_entrega|floatformat:2|default:0 }}">{{ bairro.nome }} - R$ {{ bairro.taxa_entrega|floatformat:2 }}</option>
-            {% endfor %}
-        </select>                
-    </div>
-    
-    <div class="mb-3">
-        <label for="endereco" class="form-label">Endereço</label>
-        <textarea name="endereco" id="endereco" class="form-control" placeholder="Digite o endereço" rows="2" required></textarea>
-    </div>
+<div class="ultima-home">
+    <form id="pedido-form" method="post" action="{% url 'criar_pedido' %}">
 
-    <!-- Campo de seleção de forma de pagamento -->
-    <div class="mb-3">
-        <label for="forma_pagamento" class="form-label">Forma de Pagamento</label>
-        <select name="forma_pagamento" id="forma_pagamento" class="form-select" onchange="updateTotal()" required>
-            <option value="" disabled selected>Selecione a forma de pagamento</option>
-            <option value="dinheiro">Dinheiro</option>
-            <option value="pix">PIX</option>
-            <option value="cartaodebito">Cartão Débito</option>
-            <option value="cartaocredito">Cartão Crédito</option>
-        </select>
-    </div>
-    <div id="pix" class"mb-3 d-none">
-        <div id="walletBrick_container"></div>
-    </div>
-    <!-- Campo de Troco (aparece somente se a forma de pagamento for dinheiro) -->
-    <div id="campo-troco" class="mb-3 d-none">
-        <label for="troco" class="form-label">Troco para quanto?</label>
-        <input type="number" name="troco" id="troco" class="form-control" placeholder="Digite o valor" min="0" step="5.00">
-    </div>
-    <button type="button" class="btn btn-success w-100" onclick="enviarPedido()">Finalizar Pedido</button>
-</form>
+        <div class="mb-3">
+            <label for="bairro" class="form-label">Bairro</label>
+            <select name="bairro" id="bairro" class="form-select" onchange="updateTotal()" required>
+                <option value="" disabled selected>Selecione um bairro</option>
+                {% for bairro in bairros %}
+                    <option value="{{ bairro.id }}" data-taxa="{{ bairro.taxa_entrega|floatformat:2|default:0 }}">{{ bairro.nome }} - R$ {{ bairro.taxa_entrega|floatformat:2 }}</option>
+                {% endfor %}
+            </select>                
+        </div>
+        
+        <div class="mb-3">
+            <label for="endereco" class="form-label">Endereço</label>
+            <textarea name="endereco" id="endereco" class="form-control" placeholder="Digite o endereço" rows="2" required></textarea>
+        </div>
+
+        <!-- Campo de seleção de forma de pagamento -->
+        <div class="mb-3">
+            <label for="forma_pagamento" class="form-label">Forma de Pagamento</label>
+            <select name="forma_pagamento" id="forma_pagamento" class="form-select" onchange="updateTotal()" required>
+                <option value="" disabled selected>Selecione a forma de pagamento</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="pix">PIX</option>
+                <option value="cartaodebito">Cartão Débito</option>
+                <option value="cartaocredito">Cartão Crédito</option>
+            </select>
+        </div>
+        <div id="pix" class"mb-3 d-none">
+            <div id="walletBrick_container"></div>
+        </div>
+        <!-- Campo de Troco (aparece somente se a forma de pagamento for dinheiro) -->
+        <div id="campo-troco" class="mb-3 d-none">
+            <label for="troco" class="form-label">Troco para quanto?</label>
+            <input type="number" name="troco" id="troco" class="form-control" placeholder="Digite o valor" min="0" step="5.00">
+        </div>
+        <button type="button" class="btn btn-success w-100" onclick="enviarPedido()">Finalizar Pedido</button>
+    </form>
 </div>
 <input type="hidden" name="subtotal" id="subtotal-hidden" value="0.00">
 <input type="hidden" name="itens" id="itens">

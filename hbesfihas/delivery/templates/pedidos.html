@@ -2,58 +2,118 @@
 {% block content%}
 
 {% load static %}
-
+<script>
+    function atualizarPedidos() {
+        fetch('/atualizar_pedidos/')  // Endpoint da view que retorna o HTML
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao atualizar os pedidos.');
+                }
+                return response.text(); // Recebe o HTML como texto
+            })
+            .then(html => {
+                const pedidosContainer = document.querySelector('.container ul'); // O elemento onde os pedidos estão
+                pedidosContainer.innerHTML = html; // Atualiza o conteúdo com o novo HTML
+            })
+            .catch(error => console.error(error));
+    }
+    
+    // Atualiza os pedidos a cada 5 segundos
+    setInterval(atualizarPedidos, 5000);
+</script>
 <div class="container d-flex justify-content-center">
     <h1>Meus Pedidos</h1>
 </div>
 {% if pedidos %}
-<div class="container d-flex justify-content-center">    
-    <ul>
-        {% for pedido in pedidos %}
-            <div class="card bg-light mb-3" style="max-width: 25rem;">
-           
-                <li>
-                    <div class="card-header itens-pedidos">
-                        <div class="id-pedido">
-                            <strong>ID do Pedido:</strong> {{ pedido.id }} 
-                        </div>
-                        <div class="
-                            {% if pedido.status == 'pendente' %}text-warning
-                            {% elif pedido.status == 'entregue' %}text-success
-                            {% else %}text-info{% endif %} vidro"> <strong> Status: </strong>{{ pedido.get_status_display }} 
-                        </div>
-                        <div class="status-container">
-                            {% if pedido.status == 'em_preparo' %}
-                                <img src="{% static 'imagens/cozinhando.webp'%}"  style="" frameBorder="0" class="status-gif" ></img>
-                            {% elif pedido.status == 'pendente' %}
-                                <img src="{% static 'imagens/pendente.webp'%}" alt="Pendente" class="status-gif">
-                            {% elif pedido.status == 'entregue' %}
-                                <img src="{% static 'imagens/entregue.webp'%}" alt="Entregue" class="status-gif">
-                            {% elif pedido.status == 'a_caminho' %}
-                                <img src="{% static 'imagens/a_caminho.webp'%}" alt="Entregue" class="status-gif">
-                            {% endif %}
-                        </div>
-                    </div><br>
-                    {% if pedido.status == 'em_preparo' %}
-                        <div class="progress">
-                        <div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">50%</div>
-                        </div>
-                    {% endif %}
-                    <div class="itens-pedidos"><strong> Cliente:</strong> {{ pedido.user}} </div> <br>
-                    <div class="itens-pedidos"><strong>Endereço:</strong> {{ pedido.endereco }} </div><br>
-                    <div class="itens-pedidos"><strong>Itens:</strong> {{ pedido.itens|linebreaksbr }} </div><br>
-                    <div class="itens-pedidos"><strong>Subtotal:</strong> R$ {{ pedido.subtotal }} </div><br>
-                    <div class="itens-pedidos"><strong>Total:</strong> R$ {{ pedido.total }} </div><br>
-                    <div class="itens-pedidos"><strong>Taxa de Entrega:</strong> R$ {{ pedido.taxa_entrega }} </div><br>
-                    <div class="itens-pedidos"><strong>Forma de Pagamento:</strong> {{ pedido.forma_pagamento }} </div><br>
-                    <div class="itens-pedidos"><strong>Criado em:</strong> {{ pedido.criado_em|date:"d/m/Y H:i" }} </div><br>
-                </li>
-            </div>
-        {% endfor %}
-    </ul>
-</div>   
+<div id="lista-pedidos">
+    <div class="container d-flex justify-content-center">    
+        <ul>
+            {% for pedido in pedidos %}
+                <div class="card bg-light mb-3" style="max-width: 25rem;">
+            
+                    <li>
+                        <div class="card-header itens-pedidos">
+                            <div class="id-pedido">
+                                <strong>ID do Pedido:</strong> {{ pedido.id }} 
+                            </div>
+                            <div class="
+                                {% if pedido.status == 'pendente' %}text-warning
+                                {% elif pedido.status == 'entregue' %}text-success
+                                {% else %}text-info{% endif %} vidro"> <strong> Status: </strong>{{ pedido.get_status_display }} 
+                            </div>
+                            <div class="status-container">
+                                {% if pedido.status == 'em_preparo' %}
+                                    <img src="{% static 'imagens/cozinhando.webp'%}"  style="" frameBorder="0" class="status-gif" ></img>
+                                {% elif pedido.status == 'pendente' %}
+                                    <img src="{% static 'imagens/pendente.webp'%}" alt="Pendente" class="status-gif">
+                                {% elif pedido.status == 'entregue' %}
+                                    <img src="{% static 'imagens/entregue.webp'%}" alt="Entregue" class="status-gif">
+                                {% elif pedido.status == 'a_caminho' %}
+                                    <img src="{% static 'imagens/a_caminho.webp'%}" alt="Entregue" class="status-gif">
+                                {% endif %}
+                            </div>
+                        </div><br>
+                        <div class="itens-pedidos"><strong> Cliente: </strong> {{ pedido.user}} </div> <br>
+                        <div class="itens-pedidos"><strong>Endereço: </strong> {{ pedido.endereco }} </div><br>
+                        <div class="itens-pedidos"><strong>Itens: </strong> {{ pedido.itens|linebreaksbr }} </div><br>
+                        <div class="itens-pedidos"><strong>Subtotal: </strong> R$ {{ pedido.subtotal }} </div><br>
+                        <div class="itens-pedidos"><strong>Total: </strong> R$ {{ pedido.total }} </div><br>
+                        <div class="itens-pedidos"><strong>Taxa de Entrega: </strong> R$ {{ pedido.taxa_entrega }} </div><br>
+                        <div class="itens-pedidos"><strong>Forma de Pagamento: </strong> {{ pedido.forma_pagamento }} </div><br>
+                        <div class="itens-pedidos"><strong>Criado em: </strong> {{ pedido.criado_em|date:"d/m/Y H:i" }} </div><br>
+                    </li>
+                </div>
+            {% endfor %}
+        </ul>
+    </div>   
+</div>    
 {% else %}
-    <p>Você ainda não realizou nenhum pedido.</p>
+        <p>Você ainda não realizou nenhum pedido.</p>
+
 {% endif %}
 
+<!-- Controles de paginação -->
+<nav aria-label="Navegação de página">
+    <ul class="pagination justify-content-center">
+        {% if pedidos.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1" aria-label="Primeira">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ pedidos.previous_page_number }}" aria-label="Anterior">
+                    <span aria-hidden="true">&lsaquo;</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+            <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
+        {% endif %}
+
+        <li class="page-item disabled">
+            <span class="page-link">Página {{ pedidos.number }} de {{ pedidos.paginator.num_pages }}</span>
+        </li>
+
+        {% if pedidos.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ pedidos.next_page_number }}" aria-label="Próxima">
+                    <span aria-hidden="true">&rsaquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ pedidos.paginator.num_pages }}" aria-label="Última">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">&rsaquo;</span></li>
+            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+        {% endif %}
+    </ul>
+</nav>
+</div>
+
 {% endblock%}
+
+
