@@ -1,1 +1,30 @@
-<button id="pix"> clique </button>
+<!DOCTYPE html>
+{% load static %}
+<html lang="pt-br">
+  <head>
+    <title>Título da página</title>
+    <meta charset="utf-8">
+  </head>
+<body>
+
+<div id="total" class="summary-item total mt-3">
+    <strong>Total: </strong> <span id="total-value" class="value">R$ 32,29</span>
+</div>
+
+<button id="pix" onclick='generatePixPayload()'> clique </button>
+
+<h3>Copie o código Pix abaixo:</h3>
+    <textarea id="pix-copia-e-cola" readonly rows="6" style="width: 100%;"></textarea>
+
+    <!-- QR Code -->
+    <h3>Ou escaneie o QR Code:</h3>
+    <div id="qrcode"></div>
+
+</body>
+
+  <script src="{% static 'js/pix.js' %}"></script>
+</html>
+
+
+
+ 

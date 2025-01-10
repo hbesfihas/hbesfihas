@@ -43,7 +43,11 @@
         {% endfor %}
     </div>
 </div>
+<div id="subtotal-fixed" class="subtotal-fixed">
+    <strong> Subtotal: </strong> <span id="subtotal-fixed-value">R$ 0,00</span>
+</div>
 <hr>
+
 <div class="summary-container text-center mt-5 p-4 rounded shadow">
       <div id="itens-pedido" class="summary-item-primeiro">
         <strong>Itens do Pedido: Quantidade</strong>
@@ -93,13 +97,17 @@
                 <option value="cartaocredito">Cartão Crédito</option>
             </select>
         </div>
-        <div id="pix" class"mb-3 d-none">
-            <div id="walletBrick_container"></div>
-        </div>
+     
         <!-- Campo de Troco (aparece somente se a forma de pagamento for dinheiro) -->
         <div id="campo-troco" class="mb-3 d-none">
             <label for="troco" class="form-label">Troco para quanto?</label>
             <input type="number" name="troco" id="troco" class="form-control" placeholder="Digite o valor" min="0" step="5.00">
+        </div>
+          <!-- Campo de Pix (aparece somente se a forma de pagamento for pix) -->
+        <div id="campo-pix" class="mb-3 d-none">
+            <label for="pix-output" class="d-flex"> Chave Pix (telefone): </label>
+            <textarea class="d-flex" rows="1" disabled readonly> 63981216616 </textarea>
+            <p> Breno Quaresma Praça Leal </p>
         </div>
         <button type="button" class="btn btn-success w-100" onclick="enviarPedido()">Finalizar Pedido</button>
     </form>

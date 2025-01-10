@@ -107,8 +107,8 @@ def criar_pedido(request):
 def contato(request):
     return render(request, 'contato.html')
 
-def gerar_pix(request):
-    pass
+def pix(request):
+    return render(request, 'pix.html')
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')
 def gerencia(request):

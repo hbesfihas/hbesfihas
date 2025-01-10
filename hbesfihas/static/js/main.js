@@ -52,9 +52,9 @@ function removeItem(button, id) {
     const productCard = button.closest('.product-card');
     const productPrice = parseFloat(
         productCard.querySelector('.product-price').textContent.replace('R$', '').replace(',', '.').trim()
-    )
-    // Localiza o campo <input hidden> correspondente
+    );
     const quantidadeInput = productCard.querySelector('input[type="hidden"]');
+    const productName = productCard.querySelector('.product-name').innerText; // Nome do produto para manipular a lista
 
     let currentQuantity = parseInt(quantityValue.innerText);
 
@@ -66,18 +66,33 @@ function removeItem(button, id) {
         // Atualiza o valor do <input hidden>
         quantidadeInput.value = currentQuantity;
 
-        // Esconde o contador e o botão de "-" se a quantidade chegar a 0
+        // Se a quantidade chegar a 0, esconde o contador e remove o item da lista
         if (currentQuantity === 0) {
             quantitySpan.classList.add('d-none');
-            delete produtos[id]; // Remove o produto do objeto se a quantidade for 0
+
+            // Remove o produto do objeto
+            delete produtos[id];
+
+            // Remove o item correspondente da lista pelo nome do produto
+            const itensLista = document.querySelector('#itens-lista');
+            const listaItens = itensLista.querySelectorAll('li');
+            listaItens.forEach((item) => {
+                if (item.textContent.startsWith(`${productName}:`)) {
+                    item.remove(); // Remove o item da lista
+                }
+            });
         } else {
             produtos[id].quantidade = currentQuantity; // Atualiza a quantidade no objeto
-        }
 
-        if (!produtos[id]) {
-            produtos[id] = { quantidade: quantidadeInput, preco: productPrice, nome: productCard.querySelector('.product-name').innerText };
+            // Atualiza o item da lista com a nova quantidade
+            const itensLista = document.querySelector('#itens-lista');
+            const listaItens = itensLista.querySelectorAll('li');
+            listaItens.forEach((item) => {
+                if (item.textContent.startsWith(`${productName}:`)) {
+                    item.textContent = `${productName}: ${currentQuantity}`; // Atualiza o texto
+                }
+            });
         }
-        produtos[id].quantidade = currentQuantity;
 
         // Atualiza o subtotal
         subtotal -= productPrice;
@@ -86,10 +101,12 @@ function removeItem(button, id) {
     }
 }
 
+
 function updateSubtotal() {
     // Atualiza o subtotal na interface
     document.getElementById('subtotal-value').innerText = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
     document.getElementById('subtotal-hidden').value = subtotal.toFixed(2).replace('.', ',');
+    document.getElementById('subtotal-fixed-value').innerText = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
 }
 
 function updateTotal() {
@@ -264,3 +281,25 @@ function alterarStatus(pedidoId, novoStatus) {
     });
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+
+    const summaryContainer = document.querySelector('.summary-container');
+    const fixedSubtotal = document.querySelector('#subtotal-fixed');
+    
+    function updateFixedSubtotal() {
+        const summaryTop = summaryContainer.getBoundingClientRect().top;
+        const windowHeight = window.innerHeight;
+    
+        if (summaryTop <= windowHeight) {
+            fixedSubtotal.classList.add('d-none'); // Oculta o subtotal fixo
+        } else {
+            fixedSubtotal.classList.remove('d-none'); // Mostra o subtotal fixo
+        }
+    }
+
+    // Atualiza o subtotal fixo ao rolar ou quando houver mudanças no subtotal original
+    window.addEventListener('scroll', updateFixedSubtotal);
+
+    // Sincroniza inicialmente ao carregar a página
+    updateFixedSubtotal();
+});
