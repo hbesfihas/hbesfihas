@@ -138,6 +138,16 @@ document.getElementById('forma_pagamento').addEventListener('change', function (
     }
 });
 
+document.getElementById('forma_pagamento').addEventListener('change', function(){
+    const pixField = document.getElementById('campo-pix');
+    if (this.value === 'pix') {
+        pixField.classList.remove('d-none');
+    } else {
+        pixField.classList.add('d-none');
+    }
+});
+
+
 function updateItensPedido() {
     const itensLista = document.getElementById('itens-lista');
     itensLista.innerHTML = ''; // Limpa a lista de itens
