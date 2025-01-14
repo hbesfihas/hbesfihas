@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import Produto, Pedido, Bairro, User
+from .models import Produto, Pedido, Bairro, User, Categoria
 from django.utils.html import format_html
 
+admin.site.register(Categoria),
 admin.site.register(Produto),
 admin.site.register(Pedido),
 admin.site.register(User),

@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth.views import LogoutView
-from . views import criar_pedido, gerencia, pix, alterar_status
+from . views import criar_pedido, gerencia, pix, alterar_status, sse_pedidos
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -14,5 +14,6 @@ urlpatterns = [
     path('pix', views.pix, name='pix'),
     path('alterar_status/<int:pedido_id>/', views.alterar_status, name='alterar_status'),
     path('atualizar_pedidos/', views.atualizar_pedidos, name='atualizar_pedidos'),
-
+    path('marcar_pago/<int:pedido_id>/', views.marcar_pago, name='marcar_pago'),
+    path('sse-pedidos/', sse_pedidos, name='sse_pedidos'),
 ]

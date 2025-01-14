@@ -4,40 +4,61 @@
 {% csrf_token %}
 <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
 <div class="container mt-5">
-    <h1 id="cardapio" class="text-center mb-4">Cardápio</h1>
-    <div class="row">
-        {% for produto in produtos %}
-        <div class="col-md-4">
-            <div class="product-card card text-center" data-id"{{ produto.id}}">
-                {% csrf_token %}
-                <!-- Imagem do Produto -->
-                {% if produto.imagem %}
-                <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" class="product-img mb-3">
-                {% else %}
-                <img src="{% static 'imagens/imagem_padrao.jpg' %}" alt="img" class="product-img mb-3">
-                {% endif %}
-                <!-- Nome do Produto -->
-                <div id="product-name" class="product-name">{{ produto.nome }}</div>
+    <h1 id="cardapio" class="text-center mb-4 mt-4">Cardápio</h1>
 
-                <!-- Descrição do Produto -->
-                <div class="product-description">{{ produto.descricao }}</div>
+    <!-- Abas de Categorias -->
+    <ul class="nav nav-tabs mb-4" id="categoriaAbas" role="tablist">
+        {% for categoria in categorias %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if forloop.first %}active{% endif %}" id="tab-{{ categoria.id }}" 
+                    data-bs-toggle="tab" data-bs-target="#categoria-{{ categoria.id }}" 
+                    type="button" role="tab" aria-controls="categoria-{{ categoria.id }}" 
+                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                {{ categoria.nome }}
+            </button>
+        </li>
+        {% endfor %}
+    </ul>
 
-                <!-- Preço do Produto -->
-                <div class="product-price">R$ {{ produto.preco|floatformat:2 }}</div>
-                <div class="detalhe"> (preço unitário) </div>
-                <!-- Botões de quantidade -->
-                <div class="mt-3 d-flex align-items-center justify-content-btween">
-                     <span class="quantity d-none">
-                        <button class="btn btn-danger btn-sm" onclick="removeItem(this, {{ produto.id }})">-</button>
+    <!-- Conteúdo das Abas -->
+    <div class="tab-content" id="categoriaConteudo">
+        {% for categoria in categorias %}
+        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="categoria-{{ categoria.id }}" role="tabpanel" aria-labelledby="tab-{{ categoria.id }}">
+            <div class="row">
+                {% for produto in produtos %}
+                {% if produto.categoria.id == categoria.id and produto.disponivel %}
+                <div class="col-md-4">
+                    <div class="product-card card text-center" data-id="{{ produto.id }}">
+                        {% csrf_token %}
+                        <!-- Imagem do Produto -->
+                        {% if produto.imagem %}
+                        <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" class="product-img mb-3">
+                        {% else %}
+                        <img src="{% static 'imagens/imagem_padrao.jpg' %}" alt="img" class="product-img mb-3">
+                        {% endif %}
+                        <!-- Nome do Produto -->
+                        <div id="product-name" class="product-name">{{ produto.nome }}</div>
 
-                        <span id="quantidade-{{ produto.id }}" class="mx-2 border rounded shadow" style="display: inline-block; min-width: 40px; padding: 5px 10px; text-align: center; background-color: #ffffff; border: 1px solid #007bff; border-radius: 5px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); font-weight: bold; color: #000;">0</span>
-                    
-                    </span>
-                    <button class="btn btn-success btn-sm add-btn" onclick="addItem(this, {{ produto.id }}, {{ produto.preco|floatformat:2 }})">+</button>
-                   
-                    
+                        <!-- Descrição do Produto -->
+                        <div class="product-description">{{ produto.descricao }}</div>
+
+                        <!-- Preço do Produto -->
+                        <div class="product-price">R$ {{ produto.preco|floatformat:2 }}</div>
+                        <div class="detalhe"> (preço unitário) </div>
+
+                        <!-- Botões de quantidade -->
+                        <div class="mt-3 d-flex align-items-center justify-content-between">
+                            <span class="quantity d-none">
+                                <button class="btn btn-danger btn-sm" onclick="removeItem(this, {{ produto.id }})">-</button>
+                                <span id="quantidade-{{ produto.id }}" class="mx-2 border rounded shadow">0</span>
+                            </span>
+                            <button class="btn btn-success btn-sm add-btn" onclick="addItem(this, {{ produto.id }}, {{ produto.preco|floatformat:2 }})">+</button>
+                        </div>
+                        <input type="hidden" name="quantidade_{{ produto.id }}" value="0" id="campo-quantidade-{{ produto.id }}" />
+                    </div>
                 </div>
-                <input type="hidden" name="quantidade_{{ produto.id }}" value="0" id="campo-quantidade-{{ produto.id }}"/>
+                {% endif %}
+                {% endfor %}
             </div>
         </div>
         {% endfor %}
@@ -69,22 +90,56 @@
 </div>
 <hr>
 <div class="ultima-home">
+     <!-- Botões para Delivery e Retirada -->
+     <div class="d-flex justify-content-between mb-4">
+        <button id="btn-delivery" class="btn btn-primary w-50 me-2 active" type="button" onclick="selecionarOpcao('delivery')">
+            Entregamos para você
+        </button>
+        <button id="btn-retirada" class="btn btn-secondary w-50 ms-2" type="button" onclick="selecionarOpcao('retirada')">
+            Retirar no local
+        </button>
+    </div>
+    <!--- Formulário -->
     <form id="pedido-form" method="post" action="{% url 'criar_pedido' %}">
 
-        <div class="mb-3">
+        {% csrf_token %}
+
+        <!-- Campo Bairro -->
+        <div id="campo-bairro" class="mb-3">
             <label for="bairro" class="form-label">Bairro</label>
             <select name="bairro" id="bairro" class="form-select" onchange="updateTotal()" required>
                 <option value="" disabled selected>Selecione um bairro</option>
                 {% for bairro in bairros %}
-                    <option value="{{ bairro.id }}" data-taxa="{{ bairro.taxa_entrega|floatformat:2|default:0 }}">{{ bairro.nome }} - R$ {{ bairro.taxa_entrega|floatformat:2 }}</option>
+                    <option value="{{ bairro.id }}" 
+                    data-taxa="{{ bairro.taxa_entrega|floatformat:2|default:0 }}"
+                    {% if bairro.nome == "Retirada" %}hidden{% endif %}
+                >   
+                    {{ bairro.nome }} - R$ {{ bairro.taxa_entrega|floatformat:2 }}
+                    </option>
                 {% endfor %}
-            </select>                
+            </select>
         </div>
-        
-        <div class="mb-3">
+
+        <!-- Campo Mapa, caso retirada-->
+
+        <div id="mapa-retirada" class="d-none">
+            <h4>Endereço para retirada</h4>
+            <textarea class="d-flex w-100 mb-1" style="text-align: left;"  rows="1"> Rua Constancio Gomes, nº 1252, Centro - Pedro Afonso</textarea>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=-8.976810036507255, -48.1765817221092" 
+            target="_blank" 
+            class="map-button">
+             Abrir no Google Maps
+         </a>
+        </div>
+
+        <!-- Campo Endereço -->
+        <div id="endereco-container" class="mb-2">
             <label for="endereco" class="form-label">Endereço</label>
-            <textarea name="endereco" id="endereco" class="form-control" placeholder="Digite o endereço" rows="2" required></textarea>
+            <textarea name="endereco" style="text-align: left;" id="endereco" class="form-control" placeholder="Digite o endereço&#10Ex. Rua tal, 123, perto do..." rows="2" required></textarea>
         </div>
+
+    </form>
+</div>
 
         <!-- Campo de seleção de forma de pagamento -->
         <div class="mb-3">
@@ -104,12 +159,16 @@
             <input type="number" name="troco" id="troco" class="form-control" placeholder="Digite o valor" min="0" step="5.00">
         </div>
           <!-- Campo de Pix (aparece somente se a forma de pagamento for pix) -->
-        <div id="campo-pix" class="mb-3 d-none">
-            <label for="pix-output" class="d-flex"> Chave Pix (telefone): </label>
-            <textarea class="d-flex" rows="1" disabled readonly> 63981216616 </textarea>
-            <p> Breno Quaresma Praça Leal </p>
+          <div id="campo-pix" class="campo-pix mb-5 d-none">
+            <center><img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExM24wdnI2eXZybzk0YXdzdXdzMHh0OGt0ZmZybDJxOTNybjB3N2MwbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/SfM3t0EdCQWPwsVXrM/giphy.webp" alt="PIX"class="img-pix w-50"></center>
+            <center><label for="pix-copia-e-cola">Chave Pix (copia e cola):</label></center>
+            <input type="text" id="pix-copia-e-cola" class="form-control" readonly>
+            <center><button id="botao-copiar-pix" class="btn btn-primary mb-3 mt-1">Copiar</button></center>
         </div>
-        <button type="button" class="btn btn-success w-100" onclick="enviarPedido()">Finalizar Pedido</button>
+        <div id="imagem-maquininha" class=" d-none">
+           <center> <img src="https://static.vecteezy.com/ti/vetor-gratis/p1/6530907-pagamento-contador-dispositivo-cartao-maquina-icone-em-design-isometrico-vetor.jpg" class="mb-3" alt="Cartão" width="100px" height="100px"> </center>
+        </div>
+        <button id="btn-enviar-pedido" type="button" class="btn btn-success w-100" onclick="enviarPedido()">Enviar Pedido</button>
     </form>
 </div>
 <input type="hidden" name="subtotal" id="subtotal-hidden" value="0.00">

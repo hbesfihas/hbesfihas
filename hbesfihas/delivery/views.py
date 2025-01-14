@@ -1,8 +1,9 @@
+import time
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse
-from .models import User, Produto, Bairro, Pedido
+from .models import User, Produto, Bairro, Pedido, Categoria
 from django.contrib.auth import login
 from .forms import EntradaForm
 from django.utils.timezone import localdate
@@ -10,17 +11,19 @@ import json
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.core.paginator import Paginator
+
 def home(request):
     user = request.user
     if request.user.is_authenticated:
         produtos = Produto.objects.all()
         bairros = Bairro.objects.all()
+        categorias = Categoria.objects.all()
         ultimo_pedido = Pedido.objects.filter(user=user).order_by('-criado_em').first()
         if ultimo_pedido:
             endereco = ultimo_pedido.endereco
         else:
             endereco = None
-        return render(request, 'home.html', {'produtos': produtos, 'bairros': bairros, 'user': user, 'endereco': endereco})
+        return render(request, 'home.html', {'produtos': produtos, 'bairros': bairros, 'user': user, 'endereco': endereco, 'categorias':categorias})
     else:
         return redirect('login')
 
@@ -122,7 +125,15 @@ def gerencia(request):
         
         return JsonResponse({'status': 'success', 'message': 'Status atualizado com sucesso!'})
     pedidos = Pedido.objects.all().order_by('-id')
+    for pedido in pedidos:
+        pedido.troco_calculado = (pedido.total - (pedido.troco or 0))*-1
     return render(request, 'gerencia.html', {'pedidos': pedidos})
+
+def marcar_pago(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    pedido.pago=True
+    pedido.save()
+    return redirect('gerencia')
 
 def alterar_status(request, pedido_id):
     if request.method == 'POST':
@@ -155,3 +166,19 @@ def atualizar_pedidos(request):
 def filtrar_pedidos(request):
     
     return render(request, 'gerencia.html')
+
+def sse_pedidos(request):
+    response = HttpResponse(content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    response['Connection'] = 'keep-alive'
+
+    while True:
+
+        novos_pedidos = verificar_novos_pedidos()
+
+        if novos_pedidos:
+            response.write(f'data: {novos_pedidos}\n\n')
+            response.flush()
+
+        time.sleep(10)
+    return response

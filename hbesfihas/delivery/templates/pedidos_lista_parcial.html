@@ -20,13 +20,27 @@
                 {% elif pedido.status == 'entregue' %}
                     <img src="{% static 'imagens/entregue.webp'%}" alt="Entregue" class="status-gif">
                 {% elif pedido.status == 'a_caminho' %}
-                    <img src="{% static 'imagens/a_caminho.webp'%}" alt="A Caminho" class="status-gif">
+                    <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExaXR5a2F6OHM1a3c3MWZvdGdnc3VlajNycG9mMnF6cjZlZGJsZ3FpNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/eGjD05v613IP9u5iBp/giphy.webp" alt="A Caminho" class="status-gif">
                 {% endif %}
             </div>
         </div><br>
+        {% if pedido.status == 'a_caminho' %}
+        <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 50%"></div>
+          </div>
+        {% endif %}
+        <div class="itens-pedidos"> 
+            <span>
+                {% if pedido.pago %}
+                <i class="fa fa-check text-success"></i> <strong>Pago</strong>
+                {% else %}
+                <i class="fa fa-times text-danger"></i> <strong>Aguardando Pagamento</strong>
+                {% endif %}
+            </span>
+        </div>
         <div class="itens-pedidos"><strong>Cliente: </strong> {{ pedido.user }} </div><br>
         <div class="itens-pedidos"><strong>Endereço: </strong> {{ pedido.endereco }} </div><br>
-        <div class="itens-pedidos"><strong>Itens: </strong> {{ pedido.itens|linebreaksbr }} </div><br>
+        <div class="itens-pedidos"><textarea rows="10" class="w-100">{{ pedido.itens }} </textarea></div><br>
         <div class="itens-pedidos"><strong>Subtotal: </strong> R$ {{ pedido.subtotal }} </div><br>
         <div class="itens-pedidos"><strong>Total: </strong> R$ {{ pedido.total }} </div><br>
         <div class="itens-pedidos"><strong>Taxa de Entrega: </strong> R$ {{ pedido.taxa_entrega }} </div><br>

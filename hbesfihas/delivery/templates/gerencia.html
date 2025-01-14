@@ -44,21 +44,37 @@
                     <div class="text-warning"><strong>Status:</strong> {{ pedido.get_status_display }}</div>
                 </div>
                 <div class="card-body">
+                    <div class="itens-pedidos"> 
+                        <span>
+                            {% if pedido.pago %}
+                            <i class="fa fa-check text-success"></i> <strong>Pago</strong>
+                            {% else %}
+                            <i class="fa fa-times text-danger"></i> <strong>Aguardando Pagamento</strong>
+                            {% endif %}
+                        </span>
+                    </div>
                     <div><strong>Data: </strong> {{ pedido.criado_em}}</div>
-                    <div><strong>Cliente:</strong> {{ pedido.user }}</div>
-                    <div><strong>Endereço:</strong> {{ pedido.endereco }}</div>
-                    <div><strong>Itens:</strong> 
-                        <textarea class="form-control" rows="10">{{ pedido.itens }}</textarea>
-                    </div>
-                    <div><strong>Subtotal:</strong> R$ {{ pedido.subtotal }}</div>
-                    <div><strong>Total:</strong>
-                        <input type="text" class="form-control" value="R$ {{ pedido.total }}">
-                    </div>
+                    <div><strong>Cliente: </strong> {{ pedido.user }}</div>
+                    <div><strong>Endereço: </strong> {{ pedido.endereco }}</div>
+                    <div><strong>Bairro: </strong> {{pedido.bairro}}</div>
+                    <div> <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea></div>
+                    <div><strong>Subtotal: </strong> R$ {{ pedido.subtotal }}</div>
+                    <div><strong>Total: </strong><input type="text" class="form-control" value="R$ {{ pedido.total }}" disabled></div>
+                    <div><strong>Forma de Pagamento: </strong> {{ pedido.forma_pagamento}}</div>
+                    {% if pedido.forma_pagamento == 'dinheiro' %}
+                    <div><strong>Troco (levar):</strong> R$ {{ pedido.troco_calculado }}</div>
+                    {% endif %}
                 </div>
-                <div class="card-footer d-flex justify-content-end">
-                    <button class="btn btn-success me-2" onclick="alterarStatus({{ pedido.id }}, 'em_preparo')">Aceitar</button>
-                    <button class="btn btn-danger me-2" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
-                    <button class="btn btn-secondary" onclick="imprimirPedido({{ pedido.id }})">Imprimir</button>
+                <div class="card-footer d-block justify-content-end">
+                    <button class="btn btn-success m-1" onclick="alterarStatus({{ pedido.id }}, 'em_preparo')">Aceitar</button>
+                    <button class="btn btn-danger m-1" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
+                    <button class="btn btn-secondary m-1" onclick="imprimirPedido({{ pedido.id }})">
+                        Imprimir<br>Cozinha
+                    </button>
+                    <button class="btn btn-secondary m-1" onclick="imprimirPedidoCompleto({{ pedido.id }})">
+                        Imprimir<br>Completo
+                    </button>
+                    <button class="btn btn-success m-1"><a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success">Marcar como Pago</a> </button>
                 </div>
             </div>
             {% endif %}
@@ -72,25 +88,41 @@
             <div class="card bg-light mb-3" style="max-width: 25rem;">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div><strong>ID do Pedido:</strong> {{ pedido.id }}</div>
-                    <div class="text-info"><strong>Status:</strong> {{ pedido.get_status_display }}</div>
+                    <div class="text-warning"><strong>Status:</strong> {{ pedido.get_status_display }}</div>
                 </div>
                 <div class="card-body">
+                    <div class="itens-pedidos"> 
+                        <span>
+                            {% if pedido.pago %}
+                            <i class="fa fa-check text-success"></i> <strong>Pago</strong>
+                            {% else %}
+                            <i class="fa fa-times text-danger"></i> <strong>Aguardando Pagamento</strong>
+                            {% endif %}
+                        </span>
+                    </div>
                     <div><strong>Aceito em: </strong> {{ pedido.atualizado_em}}</div>
-          <div><strong>Cliente:</strong> {{ pedido.user }}</div>
-                    <div><strong>Endereço:</strong> {{ pedido.endereco }}</div>
-                    <div><strong>Itens:</strong> 
-                        <textarea class="form-control" rows="10">{{ pedido.itens }}</textarea>
-                    </div>
-                    <div><strong>Subtotal:</strong> R$ {{ pedido.subtotal }}</div>
-                    <div><strong>Total:</strong>
-                        <input type="text" class="form-control" value="R$ {{ pedido.total }}">
-                    </div>
+                    <div><strong>Cliente: </strong> {{ pedido.user }}</div>
+                    <div><strong>Endereço: </strong> {{ pedido.endereco }}</div>
+                    <div><strong>Bairro: </strong> {{pedido.bairro}}</div>
+                    <div> <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea></div>
+                    <div><strong>Subtotal: </strong> R$ {{ pedido.subtotal }}</div>
+                    <div><strong>Total: </strong><input type="text" class="form-control" value="R$ {{ pedido.total }}" disabled></div>
+                    <div><strong>Forma de Pagamento: </strong> {{ pedido.forma_pagamento}}</div>
+                    {% if pedido.forma_pagamento == 'dinheiro' %}
+                    <div><strong>Troco (levar):</strong> R$ {{ pedido.troco_calculado }}</div>
+                    {% endif %}
                 </div>
-                <div class="card-footer d-flex justify-content-end">
-                    <button class="btn btn-success me-2" onclick="alterarStatus({{ pedido.id }}, 'a_caminho')">Enviar</button>
-                    <button class="btn btn-secondary me-2" onClick="alterarStatus({{ pedido.id }}, 'pronto')"> Pronto</button>
-                    <button class="btn btn-danger me-2" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
-                    <button class="btn btn-secondary" onclick="imprimirPedido({{ pedido.id }})">Imprimir</button>
+                <div class="card-footer d-block justify-content">
+                    <button class="btn btn-success m-1" onclick="alterarStatus({{ pedido.id }}, 'a_caminho')">Enviar</button>
+                    <button class="btn btn-secondary m-1" onClick="alterarStatus({{ pedido.id }}, 'pronto')"> Pronto</button>
+                    <button class="btn btn-danger m-1" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
+                    <button class="btn btn-secondary m-1" onclick="imprimirPedido({{ pedido.id }})">
+                        Imprimir<br>Cozinha
+                    </button>
+                    <button class="btn btn-secondary m-1" onclick="imprimirPedidoCompleto({{ pedido.id }})">
+                        Imprimir<br>Completo
+                    </button>                    
+                    <button class="btn btn-success m-1"> <a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success" >Marcar como Pago</a> </button>
                 </div>
             </div>
             {% endif %}
@@ -108,20 +140,31 @@
                 </div>
                 <div class="card-body">
                     <div><strong>Enviado :</strong> {{ pedido.atualizado_em}}</div>
+                    <div class="itens-pedidos"> 
+                        <span>
+                            {% if pedido.pago %}
+                            <i class="fa fa-check text-success"></i> <strong>Pago</strong>
+                            {% else %}
+                            <i class="fa fa-times text-danger"></i> <strong>Aguardando Pagamento</strong>
+                            {% endif %}
+                        </span>
+                    </div>
                     <div><strong>Cliente:</strong> {{ pedido.user }}</div>
                     <div><strong>Endereço:</strong> {{ pedido.endereco }}</div>
-                    <div><strong>Itens:</strong> 
-                        <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea>
-                    </div>
+                    <div><strong>Bairro: </strong> {{pedido.bairro}}</div>
+                    <div><strong>Itens:</strong> <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea></div>
                     <div><strong>Subtotal:</strong> R$ {{ pedido.subtotal }}</div>
-                    <div><strong>Total:</strong>
-                        <input type="text" class="form-control" value="R$ {{ pedido.total }}" disabled>
-                    </div>
+                    <div><strong>Total:</strong> <input type="text" class="form-control" value="R$ {{ pedido.total }}" disabled> </div>
+                    <div><strong>Forma de Pagamento: </strong> {{ pedido.forma_pagamento}}</div>
+                    {% if pedido.forma_pagamento == 'dinheiro' %}
+                    <div><strong>Troco (levar):</strong> R$ {{ pedido.troco_calculado }}</div>
+                    {% endif %}
+
                 </div>
-                <div class="card-footer d-flex justify-content-end">
-                    <button class="btn btn-success me-2" onclick="alterarStatus({{ pedido.id }}, 'entregue')">Marcar como Entregue</button>
-                    <button class="btn btn-danger me-2" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
-                    <button class="btn btn-secondary" onclick="imprimirPedido({{ pedido.id }})">Imprimir</button>
+                <div class="card-footer d-block justify-content-end">
+                    <button class="btn btn-success m-1" onclick="alterarStatus({{ pedido.id }}, 'entregue')">Marcar como Entregue</button>
+                    <button class="btn btn-danger m-1" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
+                    <a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success">Marcar como Pago</a> 
                 </div>
             </div>
             {% endif %}
@@ -139,20 +182,30 @@
                 </div>
                 <div class="card-body">
                     <div><strong>Pronto em:</strong> {{ pedido.atualizado_em}}</div>
+                    <div class="itens-pedidos"> 
+                        <span>
+                            {% if pedido.pago %}
+                            <i class="fa fa-check text-success"></i> <strong>Pago</strong>
+                            {% else %}
+                            <i class="fa fa-times text-danger"></i> <strong>Aguardando Pagamento</strong>
+                            {% endif %}
+                        </span>
+                    </div>
                     <div><strong>Cliente:</strong> {{ pedido.user }}</div>
-                    <div><strong>Endereço:</strong> {{ pedido.endereco }}</div>
-                    <div><strong>Itens:</strong> 
-                        <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea>
-                    </div>
+                    <div><strong>Itens:</strong> <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea>  </div>
                     <div><strong>Subtotal:</strong> R$ {{ pedido.subtotal }}</div>
-                    <div><strong>Total:</strong>
-                        <input type="text" class="form-control" value="R$ {{ pedido.total }}" disabled>
-                    </div>
+                    <div><strong>Total:</strong><input type="text" class="form-control" value="R$ {{ pedido.total }}" disabled> </div>
+                    <div><strong>Forma de Pagamento: </strong> {{ pedido.forma_pagamento}}</div>
+                    {% if pedido.forma_pagamento == 'dinheiro' %}
+                    <div><strong>Troco:</strong> R$ {{ pedido.troco_calculado }}</div>
+                    {% endif %}
+
                 </div>
-                <div class="card-footer d-flex justify-content-end">
-                    <button class="btn btn-success me-2" onclick="alterarStatus({{ pedido.id }},'entregue')">Entregar</button>
-                    <button class="btn btn-danger me-2" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
-                    <button class="btn btn-secondary" onclick="imprimirPedido({{ pedido.id }})">Imprimir</button>
+                <div class="card-footer d-block justify-content-end">
+                    <button class="btn btn-success m-1" onclick="alterarStatus({{ pedido.id }},'entregue')">Entregar</button>
+                    <button class="btn btn-danger m-1" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
+                    <a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success">Marcar como Pago</a> 
+
                 </div>
             </div>
             {% endif %}
@@ -170,20 +223,30 @@
                 </div>
                 <div class="card-body">
                     <div><strong>Entregue em:</strong> {{ pedido.atualizado_em}}</div>
+                    <div class="itens-pedidos"> 
+                        <span>
+                            {% if pedido.pago %}
+                            <i class="fa fa-check text-success"></i> <strong>Pago</strong>
+                            {% else %}
+                            <i class="fa fa-times text-danger"></i> <strong>Aguardando Pagamento</strong>
+                            {% endif %}
+                        </span>
+                    </div>
                     <div><strong>Cliente:</strong> {{ pedido.user }}</div>
                     <div><strong>Endereço:</strong> {{ pedido.endereco }}</div>
-                    <div><strong>Itens:</strong> 
-                        <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea>
-                    </div>
+                    <div><strong>Bairro: </strong> {{pedido.bairro}}</div>
+                    <div><strong>Itens:</strong> <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea> </div>
                     <div><strong>Subtotal:</strong> R$ {{ pedido.subtotal }}</div>
-                    <div><strong>Total:</strong>
-                        <input type="text" class="form-control" value="R$ {{ pedido.total }}" disabled>
-                    </div>
+                    <div><strong>Total:</strong><input type="text" class="form-control" value="R$ {{ pedido.total }}" disabled></div>
+                    <div><strong>Forma de Pagamento: </strong> {{ pedido.forma_pagamento}}</div>
+                    {% if pedido.forma_pagamento == 'dinheiro' %}
+                    <div><strong>Troco (levar):</strong> R$ {{ pedido.troco_calculado }}</div>
+                    {% endif %}
                 </div>
-                <div class="card-footer d-flex justify-content-end">
-                    <button class="btn btn-success me-2" onclick="alterarStatus({{ pedido.id }},'entregue')">Entregar</button>
-                    <button class="btn btn-danger me-2" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
-                    <button class="btn btn-secondary" onclick="imprimirPedido({{ pedido.id }})">Imprimir</button>
+                <!-- footer -->
+                <div class="card-footer d-block justify-content-end">
+                    <button class="btn btn-danger m-1" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
+                    <a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success">Marcar como Pago</a> 
                 </div>
             </div>
             {% endif %}

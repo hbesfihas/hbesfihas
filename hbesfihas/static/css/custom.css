@@ -1,4 +1,12 @@
 /* Tornar a imagem do produto circular */
+footer{
+    background: rgb(255,0,0);
+    background: linear-gradient(90deg, rgba(255,0,0,0.4) 0%, rgba(133,0,163,0.4) 48%, rgba(0,0,255,0.4) 80%);
+    height: 70px;
+    text-align: center;
+    padding-top: 30px;
+}
+
 .product-img {
     width: 100px;
     height: 100px;
@@ -109,7 +117,7 @@ hr {
     display: none;
 }
 .summary-container {
-    background-color: #eeeeee; /* Fundo leve para contraste */
+    background-color: #f3f3f3; /* Fundo leve para contraste */
     border: 1px solid #a0a0a0; /* Borda suave */
     max-width: 400px;
     margin: 0 auto; /* Centraliza a div */
@@ -166,11 +174,12 @@ li {
     text-align: left;
     padding-left: 10px;
 }
+
 .itens-pedidos strong {
     margin-right: 8px; /* Adiciona espaço entre o texto em negrito e o valor */
 }
 
-.text-warning { color: orange; }
+.text-warning { color: rgb(255, 0, 0); }
 .text-success { color: green; }
 .text-info { color: blue; }
 
@@ -293,3 +302,48 @@ li {
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
     padding: 10px;
   }
+
+.nav-tabs .nav-link {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #0025c9;
+}
+.nav-tabs .nav-link.active {
+    background-color: #007bff;
+    color: rgb(255, 255, 255);
+}
+.tab-content {
+    margin-top: 20px;
+}
+.imagem-maquininha{
+    width: 20%;
+    height: 20%;
+}
+.form-label{
+    font-weight: bold;
+}
+.breakWord {
+    word-break: break-word;
+  }
+
+button{
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;}
+
+textarea{
+    text-align: end;
+}
+
+.map-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+.map-button:hover {
+    background-color: #45a049;
+}

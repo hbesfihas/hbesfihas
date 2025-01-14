@@ -63,10 +63,18 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"Perfil de {self.user.nome} - {self.user.whatsapp}"
     
+
+class Categoria(models.Model):
+    nome = models.CharField(max_length=50, unique=True)
+    descricao = models.TextField(blank=True, null=True)
+    def __str__(self):
+        return self.nome
 class Produto(models.Model):
     nome = models.CharField(max_length=30, unique=True, help_text="Nome do sabor da esfiha")
     descricao = models.TextField(blank=True, help_text="Descrição dos igredientes")
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='produtos')
     preco = models.DecimalField(max_digits=3, decimal_places=2)
+    disponivel = models.BooleanField(default=True)
     imagem = models.ImageField(upload_to='imagens/',blank=True, null=True)
     
     def __str__(self):
@@ -91,6 +99,7 @@ class Pedido(models.Model):
     troco = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     bairro = models.ForeignKey(Bairro, on_delete=models.CASCADE, null=True, related_name='bairro')
     forma_pagamento = models.CharField(max_length=20, blank=True)
+    pago = models.BooleanField(default=False)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pendente')

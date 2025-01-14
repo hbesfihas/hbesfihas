@@ -21,7 +21,7 @@
     // Atualiza os pedidos a cada 5 segundos
     setInterval(atualizarPedidos, 5000);
 </script>
-<div class="container d-flex justify-content-center">
+<div class="container d-flex justify-content-center m-3">
     <h1>Meus Pedidos</h1>
 </div>
 {% if pedidos %}
@@ -49,13 +49,13 @@
                                 {% elif pedido.status == 'entregue' %}
                                     <img src="{% static 'imagens/entregue.webp'%}" alt="Entregue" class="status-gif">
                                 {% elif pedido.status == 'a_caminho' %}
-                                    <img src="{% static 'imagens/a_caminho.webp'%}" alt="Entregue" class="status-gif">
+                                    <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExaXR5a2F6OHM1a3c3MWZvdGdnc3VlajNycG9mMnF6cjZlZGJsZ3FpNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/eGjD05v613IP9u5iBp/giphy.webp" alt="Entregue" class="status-gif">
                                 {% endif %}
                             </div>
                         </div><br>
                         <div class="itens-pedidos"><strong> Cliente: </strong> {{ pedido.user}} </div> <br>
                         <div class="itens-pedidos"><strong>Endereço: </strong> {{ pedido.endereco }} </div><br>
-                        <div class="itens-pedidos"><strong>Itens: </strong> {{ pedido.itens|linebreaksbr }} </div><br>
+                        <div class="itens-pedidos"><textarea rows="10" class="w-100">{{ pedido.itens }} </textarea></div><br>
                         <div class="itens-pedidos"><strong>Subtotal: </strong> R$ {{ pedido.subtotal }} </div><br>
                         <div class="itens-pedidos"><strong>Total: </strong> R$ {{ pedido.total }} </div><br>
                         <div class="itens-pedidos"><strong>Taxa de Entrega: </strong> R$ {{ pedido.taxa_entrega }} </div><br>

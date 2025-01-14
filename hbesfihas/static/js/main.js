@@ -1,3 +1,57 @@
+function selecionarOpcao(opcao) {
+    const btnDelivery = document.getElementById('btn-delivery');
+    const btnRetirada = document.getElementById('btn-retirada');
+    const campoBairro = document.getElementById('campo-bairro');
+    const selectBairro = document.getElementById('bairro');
+    const enderecoContainer = document.getElementById('endereco-container');
+    const enderecoInput = document.getElementById('endereco');
+    const campoMapa = document.getElementById('mapa-retirada');
+
+    if (opcao === 'delivery') {
+        // Configuração para Delivery
+        btnDelivery.classList.add('active', 'btn-primary');
+        btnDelivery.classList.remove('btn-secondary');
+        btnRetirada.classList.add('btn-secondary');
+        btnRetirada.classList.remove('active', 'btn-primary');
+        campoMapa.classList.add('d-none');
+
+
+        // Reativa o campo de bairro e limpa a seleção
+        selectBairro.disabled = false;
+        selectBairro.value = ""; // Reseta o campo para "Selecione um bairro"
+        enderecoContainer.style.display = 'block'; // Mostra o campo de endereço
+        campoBairro.classList.remove('d-none');
+        selectBairro.display = 'block';
+
+    } 
+     if (opcao === 'retirada') {
+        // Configuração para Retirada
+        btnRetirada.classList.add('active', 'btn-primary');
+        btnRetirada.classList.remove('btn-secondary');
+        btnDelivery.classList.add('btn-secondary');
+        btnDelivery.classList.remove('active', 'btn-primary');
+        campoBairro.classList.add('d-none');
+        campoMapa.classList.remove('d-none');
+
+        // Seleciona automaticamente o bairro "Retirada"
+        const optionRetirada = [...selectBairro.options].find(opt => opt.text.includes('Retirada'));
+        if (optionRetirada) {
+            selectBairro.value = optionRetirada.value;
+        }
+        selectBairro.disabled = true; // Desativa o campo de bairro
+
+        // Preenche automaticamente o campo de endereço para passar na validação
+        enderecoInput.value = "Retirada no local"; // Valor fictício que passa na validação
+        enderecoContainer.style.display = 'none'; // Oculta o campo de endereço
+        
+    }
+}
+
+// Define o estado inicial como Delivery
+document.addEventListener('DOMContentLoaded', () => selecionarOpcao('delivery'));
+
+
+
 let produtos = {}; // Objeto para armazenar produtos e suas quantidades
 let subtotal = 0; // Inicializa o subtotal
 
@@ -123,6 +177,7 @@ function updateTotal() {
     const formaPagamento = document.getElementById('forma_pagamento').value;
     let acrescimo = 0;
     const acrescimoDiv = document.getElementById('acrescimo-value');
+    const imagemCartao = document.getElementById('imagem-maquininha');
     if (formaPagamento === 'cartaocredito') {
         acrescimo = subtotal * 0.05; // 5% de acréscimo
         acrescimoDiv.classList.remove('d-none');
@@ -138,6 +193,11 @@ function updateTotal() {
     } else {
         trocoDiv.classList.add('d-none');
     }
+    if (formaPagamento === 'cartaodebito'|| formaPagamento === 'cartaocredito'){
+        imagemCartao.classList.remove('d-none');
+    } else {
+        imagemCartao.classList.add('d-none');
+    }
     updateItensPedido();
     // Calcula o total final
     const total = subtotal + taxaEntrega + acrescimo;
@@ -145,15 +205,6 @@ function updateTotal() {
     document.getElementById('form-total').value = total.toFixed(2).replace('.', ',');
 }
 
-// Adiciona um listener para mostrar o campo de troco se a forma de pagamento for dinheiro
-document.getElementById('forma_pagamento').addEventListener('change', function () {
-    const trocoField = document.getElementById('campo-troco');
-    if (this.value === 'dinheiro') {
-        trocoField.classList.remove('d-none');
-    } else {
-        trocoField.classList.add('d-none');
-    }
-});
 
 document.getElementById('forma_pagamento').addEventListener('change', function(){
     const pixField = document.getElementById('campo-pix');
@@ -214,7 +265,7 @@ function enviarPedido() {
     if (!endereco.value.trim()) {
         alert('Por favor, preencha o campo de endereço.');
         endereco.focus();
-        return;
+        return false;
     }
 
     //  Verifica se a forma de pagamento está preenchida
@@ -242,7 +293,7 @@ function enviarPedido() {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            alert(`Pedido realizado com sucesso! ID do pedido: ${data.pedido_id}`);
+            alert(`Pedido realizado com sucesso! ID do pedido: ${data.pedido_id}\n Acompanhe seu pedido em Meus Pedidos`);
             window.location.href = data.redirect_url;
         } else {
             alert('Erro ao criar o pedido: ' + data.message);
@@ -303,3 +354,347 @@ document.addEventListener('DOMContentLoaded', function () {
     // Sincroniza inicialmente ao carregar a página
     updateFixedSubtotal();
 });
+
+// AREA DO PIX
+
+// Dados fixos do recebedor
+const name = "Breno";
+const pixKey = "+5563981216616";
+const city = "Pedro Afonso";
+const textIdentifier = "HBESFIHAS";
+
+// Função para gerar o payload Pix
+function generatePixPayload(name, pixKey, city, textIdentifier, totalValue) {
+    const totalFormatted = totalValue.padStart(2, "0").trim(); // Exemplo: 23.90 
+    const merchantAccountInfo = `0014BR.GOV.BCB.PIX01${pixKey.length.toString().padStart(2, '0')}${pixKey}`;
+    const additionalDataField = `05${textIdentifier.length.toString().padStart(2, '0')}${textIdentifier}`;
+
+    const payload = [
+        '000201', // Payload Format Indicator
+        `26${merchantAccountInfo.length.toString().padStart(2, '0')}${merchantAccountInfo}`, // Merchant Account Info
+        '52040000', // Merchant Category Code
+        '5303986', // Transaction Currency (BRL)
+        `54${totalFormatted.length.toString().padStart(2, '0')}${totalFormatted}`, // Transaction Amount
+        '5802BR', // Country Code
+        `59${name.length.toString().padStart(2, '0')}${name}`, // Merchant Name
+        `60${city.length.toString().padStart(2, '0')}${city}`, // Merchant City
+        `62${additionalDataField.length.toString().padStart(2, '0')}${additionalDataField}`, // Additional Data Field
+        '6304' // CRC Placeholder
+    ].join('');
+
+    // Calcula o CRC16
+    const crc16 = crc16Calculator(payload);
+    return `${payload}${crc16}`;
+}
+
+// Função para calcular o CRC16
+function crc16Calculator(payload) {
+    const polynomial = 0x1021;
+    let crc = 0xFFFF;
+
+    for (let i = 0; i < payload.length; i++) {
+        const byte = payload.charCodeAt(i);
+        crc ^= (byte << 8);
+
+        for (let j = 0; j < 8; j++) {
+            if ((crc & 0x8000) !== 0) {
+                crc = (crc << 1) ^ polynomial;
+            } else {
+                crc <<= 1;
+            }
+        }
+
+        crc &= 0xFFFF;
+    }
+
+    return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+
+// Função para atualizar o campo Pix quando necessário
+function updatePixField() {
+    const formaPagamento = document.getElementById('forma_pagamento').value;
+    const pixField = document.getElementById('campo-pix');
+    const totalValue = document.getElementById('form-total').value.replace(',','.');
+
+    if (formaPagamento === 'pix') {
+        const pixPayload = generatePixPayload(name, pixKey, city, textIdentifier, totalValue);
+        document.getElementById('pix-copia-e-cola').value = pixPayload;
+        pixField.classList.remove('d-none');
+    } else {
+        pixField.classList.add('d-none');
+    }
+}
+
+// Adiciona o evento no dropdown de forma de pagamento
+document.getElementById('forma_pagamento').addEventListener('change', updatePixField);
+
+// Função para copiar o Pix para a área de transferência
+function copiarPix() {
+    const pixText = document.getElementById('pix-copia-e-cola');
+    pixText.select(); // Seleciona o texto no campo
+    pixText.setSelectionRange(0, 99999); // Para dispositivos móveis
+
+    try {
+        document.execCommand('copy');
+        alert('Chave Pix copiada para a área de transferência!\n Seu pedido será enviado');
+        document.getElementById('btn-enviar-pedido').click();
+    } catch (err) {
+        alert('Erro ao copiar a chave Pix.');
+    }
+}
+
+// Adiciona o evento ao botão de copiar Pix
+document.getElementById('botao-copiar-pix').addEventListener('click', function (event) {
+    event.preventDefault(); // Impede o botão de submeter o formulário
+    copiarPix();
+
+    
+});
+
+function imprimirPedido(pedidoId) {
+    // Localiza o card do pedido específico pelo ID
+    const pedidoCard = document.querySelector(`[onclick="imprimirPedido(${pedidoId})"]`).closest('.card');
+
+    if (pedidoCard) {
+        // Extrai os dados do pedido para impressão
+        const pedidoIdText = pedidoCard.querySelector('.card-header div').innerText.replace('ID do ',''); // ID do pedido
+        const clienteText = pedidoCard.querySelector('div:nth-child(3)').innerText; // Cliente
+        const itensText = pedidoCard.querySelector('textarea').value.trim(); // Itens do pedido (em forma de lista)
+
+        // Lógica para contar a quantidade total de produtos
+        let totalProdutos = 0;
+
+        if (itensText) {
+            const linhas = itensText.split('\n'); // Divide o texto em linhas
+            let isItensSection = false; // Flag para saber quando estamos na seção de itens do pedido
+            linhas.forEach((linha) => {
+                linha = linha.trim(); // Remove espaços no início e no final
+
+                // Ignora a primeira linha do cabeçalho ("Itens do Pedido: Quantidade")
+                if (linha.includes("Itens do Pedido: Quantidade") || linha === "") {
+                    return;
+                }
+
+                // Se a linha contiver ":", provavelmente é um item do pedido com quantidade
+                if (linha.includes(':')) {
+                    const partes = linha.split(':'); // Divide pelo ":"
+                    if (partes.length > 1) {
+                        const quantidade = parseInt(partes[1].trim(), 10); // Extrai a quantidade após ":"
+                        if (!isNaN(quantidade)) {
+                            totalProdutos += quantidade; // Soma a quantidade ao total
+                        }
+                    }
+                }
+            });
+        }
+
+        // Cria o layout HTML para a impressão
+        const htmlImpressao = `
+            <html>
+                <head>
+                    <title>Impressão de Pedido</title>
+                    <style>
+                        body {
+                            font-family: calibri;
+                            font-size: 20px;
+                            margin: 0;
+                            padding: 10px;
+                            width: 55mm; /* Ideal para impressoras térmicas */
+                        }
+                        h1, h2, h3 {
+                            text-align: center;
+                            margin: 5px 0;
+                        }
+                        .pedido-info {
+                            margin-bottom: 10px;
+                        }
+                        .pedido-info div {
+                            margin: 5px 0;
+                        }
+                        .itens {
+                            margin-top: 10px;
+                            text-align: right;
+                        }
+                        .itens div {
+                            margin: 2px 0;
+                        }
+                        hr {
+                            border: none;
+                            border-top: 1px dashed #000;
+                            margin: 5px 0;
+                        }
+                        .footer {
+                            text-align: center;
+                            margin-top: 10px;
+                            font-size: 12px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h2>${pedidoIdText}</h2>
+                    <div>${clienteText}</div>
+                    <hr>
+                    <div class="itens">${itensText.replace(/\n/g, '<br>')}</div>
+                    <hr>
+                    <div class="itens"><strong>Total de Produtos:</strong> ${totalProdutos}</div>
+                </body>
+            </html>
+        `;
+
+        // Envia para a impressão
+        const janelaImpressao = window.open('', '_blank', 'width=600,height=800');
+        janelaImpressao.document.write(htmlImpressao);
+
+        // Fecha a janela de impressão após carregar
+        janelaImpressao.document.close();
+        janelaImpressao.print();
+    } else {
+        alert('Pedido não encontrado!');
+    }
+}
+
+const eventoSSE = new EventSource('/sse-pedidos/');
+
+eventoSSE.onmessage = function (event){
+    const novosPedidos = JSON.parse(event.data);
+
+    if (novosPedidos){
+        const audio = new Audio('/static/audio/notification.mp3');
+        audio.play();
+
+        alert('Novo pedido recebido!');
+    }
+};
+
+
+function imprimirPedidoCompleto(pedidoId){
+    const pedidoCard = document.querySelector(`[onclick="imprimirPedido(${pedidoId})"]`).closest('.card');
+
+    if (pedidoCard) {
+        const pedidoIdText = pedidoCard.querySelector('.card-header div').innerText.replace('ID do ',''); // ID do pedido
+        const pagoText = pedidoCard.querySelector('div:nth-last-child(9)').innerText;
+        const dataText = pedidoCard.querySelector('div:nth-last-child(8)').innerText;
+        const clienteText = pedidoCard.querySelector('div:nth-child(3)').innerText; // Cliente
+        const enderecoText = pedidoCard.querySelector('div:nth-child(4)').innerText;
+        const itensText = pedidoCard.querySelector('textarea').value.trim(); // Itens do pedido (em forma de lista)
+        const subtotalText = pedidoCard.querySelector('div:nth-child(7)').innerText;
+        const totalText = pedidoCard.querySelector('div:nth-child(8) input')?.value || 'Total não disponível';
+        const formaPagamentoText = pedidoCard.querySelector('div:nth-child(9)').innerText;
+        const bairroText = pedidoCard.querySelector('div:nth-last-child(5)').innerText;
+        var trocoText = "=)";
+        if (formaPagamentoText == "Forma de Pagamento: dinheiro"){
+        trocoText = pedidoCard.querySelector('div:nth-child(10)').innerText;}
+    
+
+
+           // Lógica para contar a quantidade total de produtos
+           let totalProdutos = 0;
+
+           if (itensText) {
+               const linhas = itensText.split('\n'); // Divide o texto em linhas
+               let isItensSection = false; // Flag para saber quando estamos na seção de itens do pedido
+               linhas.forEach((linha) => {
+                   linha = linha.trim(); // Remove espaços no início e no final
+       
+                   // Ignora a primeira linha do cabeçalho ("Itens do Pedido: Quantidade")
+                   if (linha.includes("Itens do Pedido: Quantidade") || linha === "") {
+                       return;
+                   }
+       
+                   // Se a linha contiver ":", provavelmente é um item do pedido com quantidade
+                   if (linha.includes(':')) {
+                       const partes = linha.split(':'); // Divide pelo ":"
+                       if (partes.length > 1) {
+                           const quantidade = parseInt(partes[1].trim(), 10); // Extrai a quantidade após ":"
+                           if (!isNaN(quantidade)) {
+                               totalProdutos += quantidade; // Soma a quantidade ao total
+                           }
+                       }
+                   }
+               });
+           }
+               // Cria o layout HTML para a impressão
+               const htmlImpressao = `
+                   <html>
+                       <head>
+                           <title>Impressão de Pedido</title>
+                           <style>
+                               body {
+                                   font-family: calibri;
+                                   font-size: 14px;
+                                   margin: 0;
+                           
+                                   width: 50mm; /* Ideal para impressoras térmicas */
+                               }
+                               h1, h2, h3 {
+                                   text-align: center;
+                                   margin: 5px 0;
+                               }
+                               .pedido-info {
+                                   margin-bottom: 10px;
+                               }
+                               .pedido-info div {
+                                   margin: 5px 0;
+                                   text-align: right;
+                               }
+                               .itens {
+                                   margin-top: 10px;
+                                   text-align: right;
+                               }
+                               .itens div {
+                                   margin: 2px 0;
+                               }
+                               hr {
+                                   border: none;
+                                   border-top: 1px dashed #000;
+                                   margin: 5px 0;
+                               }
+                               .footer {
+                                   text-align: center;
+                                   margin-top: 10px;
+                                   font-size: 12px;
+                               }
+                           </style>
+                       </head>
+                       <body>
+                           <h1>HB Esfihas</h1>
+                           <h2>${pedidoIdText}</h2>
+                           <h3>${clienteText}</h3>
+                           <hr>
+                           <div class="pedido-info">
+                               <div>${pagoText}</div>
+                               <div>${dataText}</div>
+                             
+                               <div> ${enderecoText}</div>
+                               <div> ${bairroText} </div>
+                           </div>
+                           <hr>
+                           <div class="itens">${itensText.replace(/\n/g, '<br>')}</div>
+                           <hr>
+                           <div class="pedido-info">
+                              <div><strong>Qnt. Total de itens:</strong> ${totalProdutos}</div>
+                              <div> ${subtotalText} </div>    
+                              <div><strong>Total:</strong> ${totalText}</div>
+                              <div>${formaPagamentoText}</div>
+                              <div>${trocoText||0}</div>
+                           </div>
+                           <hr>
+                           <div class="footer">
+                               Impressão gerada pelo sistema HB Esfihas<br>
+                               Obrigado pela preferência!
+                           </div>
+                       </body>
+                   </html>
+               `;
+       
+               // Envia para a impressão
+               const janelaImpressao = window.open('', '_blank', 'width=540,height=800');
+               janelaImpressao.document.write(htmlImpressao);
+       
+               // Fecha a janela de impressão após carregar
+               janelaImpressao.document.close();
+               janelaImpressao.print();
+           } else {
+               alert('Pedido não encontrado!');
+           }
+       }
