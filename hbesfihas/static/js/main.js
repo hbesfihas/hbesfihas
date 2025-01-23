@@ -239,8 +239,20 @@ function enviarPedido() {
     const itensPedido = itensPedidoData.replace(/^\s+|\s+$/gm, '').replace(/([a-zA-Záéíóúçãêô ]+):/g, '\n$1:').replace(/^\n/, '');;
     const taxaEntregaPedido = parseFloat(document.querySelector("#taxa-entrega .value").textContent.trim().replace("R$", "").replace(",","."));
     const acrescimoPedido = parseFloat(document.querySelector('#acrescimo-value .value').textContent.trim().replace("R$", "").replace(",","."));
+    const pontosTroca = document.getElementById('pontos_troca').value;
     
-     
+    // Novo: Verificar se o cliente tem pontos suficientes
+    const pontosCliente = parseFloat(document.getElementById('pontos-cliente').value.trim());
+    if (formaPagamento === "pontos" && pontosCliente < pontosTroca) {
+        alert("Você não possui pontos suficientes para realizar este pedido.");
+        return;
+    }
+
+    if (subtotal < 15){
+        alert("Você precisa selecionar no mínimo 4 esfihas!");
+        return;
+    }
+
     const pedido = {
         endereco: enderecoPedido,
         itens: itensPedido, 
@@ -251,6 +263,7 @@ function enviarPedido() {
         troco: trocoPedido,
         bairro: bairroPedido,
         forma_pagamento: formaPagamento,
+        pontos_necessarios: pontosTroca,
     }
    
 
@@ -306,7 +319,6 @@ function enviarPedido() {
     // Submeter o formulário 
 
 }
-
 
 function alterarStatus(pedidoId, novoStatus) {
     fetch(`/alterar_status/${pedidoId}/`, {
@@ -698,3 +710,8 @@ function imprimirPedidoCompleto(pedidoId){
                alert('Pedido não encontrado!');
            }
        }
+
+
+
+
+

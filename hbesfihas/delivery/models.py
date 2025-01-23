@@ -27,6 +27,8 @@ class User(AbstractBaseUser):
     username = None
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
+    pontos = models.IntegerField(default=0)
+    ultimo_endereco = models.TextField(null=True, blank=True)
 
     USERNAME_FIELD = 'whatsapp'  # Campo usado para login
     REQUIRED_FIELDS = ['nome']   # Campos obrigatórios ao criar o usuário
@@ -46,23 +48,11 @@ class User(AbstractBaseUser):
     def is_staff(self):
         return self.is_admin
 
-
-
 class Bairro(models.Model):
     nome= models.CharField(max_length=50, unique=True)
     taxa_entrega = models.DecimalField(max_digits=3, decimal_places=2)
     def __str__(self):
         return f'{self.nome} - R$ {self.taxa_entrega:.2f}'
-
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
-    endereco = models.CharField(max_length=255)
-    bairro = models.ForeignKey(Bairro, on_delete=models.SET_NULL, null=True)
-
-    def __str__(self):
-        return f"Perfil de {self.user.nome} - {self.user.whatsapp}"
-    
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=50, unique=True)
@@ -73,9 +63,11 @@ class Produto(models.Model):
     nome = models.CharField(max_length=30, unique=True, help_text="Nome do sabor da esfiha")
     descricao = models.TextField(blank=True, help_text="Descrição dos igredientes")
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='produtos')
-    preco = models.DecimalField(max_digits=3, decimal_places=2)
+    preco = models.DecimalField(max_digits=10, decimal_places=2)
     disponivel = models.BooleanField(default=True)
     imagem = models.ImageField(upload_to='imagens/',blank=True, null=True)
+    trocavel_por_pontos = models.BooleanField(default=False)
+    pontos_troca = models.DecimalField(max_digits=5, decimal_places=0)
     
     def __str__(self):
         return self.nome
@@ -103,17 +95,21 @@ class Pedido(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pendente')
-
+    pontos_ganhos = models.DecimalField(max_digits=20, decimal_places=0, blank=True)
     def __str__(self):
         return f'Pedido {self.id} - {self.user.nome}'
 
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        # Cria o perfil do usuário quando o usuário é criado
-        UserProfile.objects.create(user=instance)
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def save_user_profile(sender, instance, **kwargs):
     # Salva o perfil do usuário sempre que o usuário for salvo
     instance.profile.save()
+
+
+class ConfiguracaoLoja(models.Model):
+    loja_aberta = models.BooleanField(default=True)
+    mensagem_fechada = models.TextField(default="Estamos fechados no momento.")
+    imagem_fechada = models.ImageField(upload_to='imagens/loja/', blank=True, null=True)
+
+    def __str__(self):
+        return "Configuração da Loja"

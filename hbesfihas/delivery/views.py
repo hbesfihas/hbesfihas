@@ -1,9 +1,10 @@
+from decimal import Decimal, InvalidOperation
 import time
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse
-from .models import User, Produto, Bairro, Pedido, Categoria
+from .models import User, Produto, Bairro, Pedido, Categoria, ConfiguracaoLoja
 from django.contrib.auth import login
 from .forms import EntradaForm
 from django.utils.timezone import localdate
@@ -13,17 +14,24 @@ from asgiref.sync import async_to_sync
 from django.core.paginator import Paginator
 
 def home(request):
+    
     user = request.user
     if request.user.is_authenticated:
+        configuracao = get_object_or_404(ConfiguracaoLoja, pk=1)
+
+        if not configuracao.loja_aberta:
+            contexto = {
+                'mensagem_fechada': configuracao.mensagem_fechada,
+                'imagem_fechada': configuracao.imagem_fechada,
+            }
+            return render(request, 'loja_fechada.html', contexto)
+
         produtos = Produto.objects.all()
         bairros = Bairro.objects.all()
         categorias = Categoria.objects.all()
-        ultimo_pedido = Pedido.objects.filter(user=user).order_by('-criado_em').first()
-        if ultimo_pedido:
-            endereco = ultimo_pedido.endereco
-        else:
-            endereco = None
-        return render(request, 'home.html', {'produtos': produtos, 'bairros': bairros, 'user': user, 'endereco': endereco, 'categorias':categorias})
+        ultimo_endereco = request.user.ultimo_endereco if request.user.ultimo_endereco else ""
+
+        return render(request, 'home.html', {'produtos': produtos, 'bairros': bairros, 'user': user, 'ultimo_endereco': ultimo_endereco, 'categorias':categorias})
     else:
         return redirect('login')
 
@@ -78,32 +86,75 @@ def limpar_valor(valor_str):
 @login_required
 def criar_pedido(request):
     if request.method == 'POST':
-        data = json.loads(request.body)  # Recebe os dados enviados do frontend
-        
-        bairro = Bairro.objects.get(id=data['bairro'])
+        try:
+            data = json.loads(request.body)  # Recebe os dados enviados do frontend
+            endereco = data.get('endereco')
 
-        try:          
-            # Criação do objeto Pedido
+            request.user.ultimo_endereco = endereco
+            request.user.save()
+
+            # Validar campos obrigatórios
+            if not all(key in data for key in ['bairro', 'forma_pagamento', 'subtotal', 'total', 'itens', 'endereco']):
+                raise ValueError("Dados incompletos enviados no pedido.")
+
+            
+            # Converter valores financeiros para Decimal
+            try:
+                subtotal = Decimal(data['subtotal'])
+                total = Decimal(data['total'])
+                pontos_necessarios = int(data['pontos_necessarios'])
+            except InvalidOperation:
+                raise ValueError("Valores financeiros inválidos.")
+
+            bairro = Bairro.objects.get(id=data['bairro'])
+            forma_pagamento = data['forma_pagamento']
+
+            # Inicializar os pontos ganhos como 0
+            pontos_ganhos = Decimal('0')
+
+            if forma_pagamento == 'pontos':
+                pontos_necessarios += int(data['taxa_entrega'])  # Adicionar o valor do frete em pontos
+
+            if forma_pagamento == 'pontos':
+                # Verificar se o cliente tem pontos suficientes
+                if request.user.pontos < pontos_necessarios:
+                    raise ValueError("Pontos insuficientes para realizar este pedido.")
+
+                # Subtrair os pontos do cliente
+                request.user.pontos -= pontos_necessarios
+                request.user.save()
+            else:
+                # Calcular os pontos ganhos (10% do subtotal) apenas para outras formas de pagamento
+                pontos_ganhos = (subtotal * Decimal('0.1')).quantize(Decimal('1'))  # Arredonda para inteiro
+                # Adicionar os pontos ganhos ao saldo do usuário
+                request.user.pontos += int(pontos_ganhos)
+                request.user.save()
+
+            # Criar o pedido
             pedido = Pedido.objects.create(
-                user=request.user,  # Encontre o usuário pelo username (ou ID, conforme sua necessidade)
+                user=request.user,
                 endereco=data['endereco'],
                 itens=data['itens'],
-                subtotal=data['subtotal'],
-                total=data['total'],
-                taxa_entrega=data['taxa_entrega'],
-                taxa_cartao=data['taxa_cartao'],
+                subtotal=subtotal,
+                total=total,
+                taxa_entrega=data.get('taxa_entrega', Decimal('0')),
+                taxa_cartao=data.get('taxa_cartao', Decimal('0')),
                 troco=data.get('troco', None),  # O troco pode ser None, caso não seja enviado
                 bairro=bairro,
-                forma_pagamento=data['forma_pagamento']
+                forma_pagamento=forma_pagamento,
+                pontos_ganhos=pontos_ganhos  # Atribuir os pontos ganhos
             )
-            return JsonResponse({
-                'status': 'success', 
-                'pedido_id': pedido.id, 
-                'redirect_url': reverse('pedidos')
-                }, status=201) 
 
-        except Exception as e:
+            return JsonResponse({
+                'status': 'success',
+                'pedido_id': pedido.id,
+                'redirect_url': reverse('pedidos')
+            }, status=201)
+
+        except ValueError as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f"Erro interno: {str(e)}"}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Método não permitido'}, status=405)
            
@@ -167,18 +218,4 @@ def filtrar_pedidos(request):
     
     return render(request, 'gerencia.html')
 
-def sse_pedidos(request):
-    response = HttpResponse(content_type='text/event-stream')
-    response['Cache-Control'] = 'no-cache'
-    response['Connection'] = 'keep-alive'
 
-    while True:
-
-        novos_pedidos = verificar_novos_pedidos()
-
-        if novos_pedidos:
-            response.write(f'data: {novos_pedidos}\n\n')
-            response.flush()
-
-        time.sleep(10)
-    return response

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container text-center mt-5">
+    {% if imagem_fechada %}
+        <img src="{{ imagem_fechada.url }}" alt="Loja Fechada" class="img-fluid mb-4">
+    {% endif %}
+    <h1 class="text-danger">{{ mensagem_fechada }}</h1>
+</div>
+
+{% endblock %}

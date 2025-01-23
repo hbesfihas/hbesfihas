@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "delivery",
     "channels",
+    "mathfilters",
 ]
 ASGI_APPLICATION = 'hbesfihas.asgi.application'
 CHANNEL_LAYERS = {
