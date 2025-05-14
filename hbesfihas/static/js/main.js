@@ -23,7 +23,7 @@ function selecionarOpcao(opcao) {
         campoBairro.classList.remove('d-none');
         selectBairro.display = 'block';
 
-    } 
+    }
      if (opcao === 'retirada') {
         // Configuração para Retirada
         btnRetirada.classList.add('active', 'btn-primary');
@@ -43,7 +43,7 @@ function selecionarOpcao(opcao) {
         // Preenche automaticamente o campo de endereço para passar na validação
         enderecoInput.value = "Retirada no local"; // Valor fictício que passa na validação
         enderecoContainer.style.display = 'none'; // Oculta o campo de endereço
-        
+
     }
 }
 
@@ -64,7 +64,7 @@ function formatCurrency(value) {
 }
 
 function addItem(button, id) {
-    
+
     const quantitySpan = button.previousElementSibling;
     const quantityValue = quantitySpan.querySelector('span');
     const productCard = button.closest('.product-card');
@@ -85,7 +85,7 @@ function addItem(button, id) {
     quantidadeInput.value = currentQuantity;
 
     // Exibe o contador e o botão de "-" se ainda não estiver visível
-    
+
     quantitySpan.classList.remove('d-none');
 
     // Atualiza o objeto produtos
@@ -168,7 +168,7 @@ function updateTotal() {
     const selectedOption = bairroSelect.options[bairroSelect.selectedIndex];
     const taxaEntregaStr = selectedOption ? selectedOption.getAttribute('data-taxa') : '0';
     const taxaEntrega = parseFloat(taxaEntregaStr) || 0;
-
+    const campoPix = document.getElementById('campo-pix');
 
     // Atualiza a taxa de entrega no DOM
     document.getElementById('taxa-entrega').querySelector('.value').innerText = `R$ ${taxaEntrega.toFixed(2).replace('.', ',')}`;
@@ -198,22 +198,29 @@ function updateTotal() {
     } else {
         imagemCartao.classList.add('d-none');
     }
+
     updateItensPedido();
     // Calcula o total final
     const total = subtotal + taxaEntrega + acrescimo;
     document.getElementById('total-value').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
-    document.getElementById('form-total').value = total.toFixed(2).replace('.', ',');
+
+    // campo do PIX se a forma de pagamento for pix
+    const pixField = document.getElementById('campo-pix');
+    const totalValue = String(total);
+    if (formaPagamento === 'pix') {
+            const pixPayload = generatePixPayload(name, pixKey, city, textIdentifier, totalValue);
+            document.getElementById('pix-copia-e-cola').value = pixPayload;
+            pixField.classList.remove('d-none');
+        } else {
+            pixField.classList.add('d-none');
+    }
+
+
+
 }
 
 
-document.getElementById('forma_pagamento').addEventListener('change', function(){
-    const pixField = document.getElementById('campo-pix');
-    if (this.value === 'pix') {
-        pixField.classList.remove('d-none');
-    } else {
-        pixField.classList.add('d-none');
-    }
-});
+
 
 
 function updateItensPedido() {
@@ -229,7 +236,7 @@ function updateItensPedido() {
 }
 
 function enviarPedido() {
-    const bairroPedido = document.getElementById("bairro").value; 
+    const bairroPedido = document.getElementById("bairro").value;
     const formaPagamento = document.querySelector("#forma_pagamento").value;
     const enderecoPedido = document.querySelector("#endereco").value;
     const trocoPedido = parseFloat(document.querySelector("#troco")?.value || null);
@@ -239,8 +246,10 @@ function enviarPedido() {
     const itensPedido = itensPedidoData.replace(/^\s+|\s+$/gm, '').replace(/([a-zA-Záéíóúçãêô ]+):/g, '\n$1:').replace(/^\n/, '');;
     const taxaEntregaPedido = parseFloat(document.querySelector("#taxa-entrega .value").textContent.trim().replace("R$", "").replace(",","."));
     const acrescimoPedido = parseFloat(document.querySelector('#acrescimo-value .value').textContent.trim().replace("R$", "").replace(",","."));
-    const pontosTroca = document.getElementById('pontos_troca').value;
-    
+    const pontosTrocaElement = document.getElementById('pontos_troca');
+    const pontosTroca = pontosTrocaElement ? parseFloat(pontosTrocaElement.value) || 0 : 0;
+
+
     // Novo: Verificar se o cliente tem pontos suficientes
     const pontosCliente = parseFloat(document.getElementById('pontos-cliente').value.trim());
     if (formaPagamento === "pontos" && pontosCliente < pontosTroca) {
@@ -255,7 +264,7 @@ function enviarPedido() {
 
     const pedido = {
         endereco: enderecoPedido,
-        itens: itensPedido, 
+        itens: itensPedido,
         subtotal: subtotalPedido,
         total: totalPedido,
         taxa_entrega: taxaEntregaPedido,
@@ -265,7 +274,7 @@ function enviarPedido() {
         forma_pagamento: formaPagamento,
         pontos_necessarios: pontosTroca,
     }
-   
+
 
     // Verifica se o bairro está preenchido
     if (!bairro.value) {
@@ -306,7 +315,7 @@ function enviarPedido() {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            alert(`Pedido realizado com sucesso! ID do pedido: ${data.pedido_id}\n Acompanhe seu pedido em Meus Pedidos`);
+            alert(`Pedido realizado com sucesso! ID do pedido: ${data.pedido_id}\n Acompanhe em Meus Pedidos`);
             window.location.href = data.redirect_url;
         } else {
             alert('Erro ao criar o pedido: ' + data.message);
@@ -316,7 +325,7 @@ function enviarPedido() {
         console.error('Erro:', error);
         alert('Erro ao enviar o pedido.');
     });
-    // Submeter o formulário 
+    // Submeter o formulário
 
 }
 
@@ -348,11 +357,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const summaryContainer = document.querySelector('.summary-container');
     const fixedSubtotal = document.querySelector('#subtotal-fixed');
-    
+
     function updateFixedSubtotal() {
         const summaryTop = summaryContainer.getBoundingClientRect().top;
         const windowHeight = window.innerHeight;
-    
+
         if (summaryTop <= windowHeight) {
             fixedSubtotal.classList.add('d-none'); // Oculta o subtotal fixo
         } else {
@@ -377,7 +386,7 @@ const textIdentifier = "HBESFIHAS";
 
 // Função para gerar o payload Pix
 function generatePixPayload(name, pixKey, city, textIdentifier, totalValue) {
-    const totalFormatted = totalValue.padStart(2, "0").trim(); // Exemplo: 23.90 
+    const totalFormatted = totalValue.padStart(2, "0").trim(); // Exemplo: 23.90
     const merchantAccountInfo = `0014BR.GOV.BCB.PIX01${pixKey.length.toString().padStart(2, '0')}${pixKey}`;
     const additionalDataField = `05${textIdentifier.length.toString().padStart(2, '0')}${textIdentifier}`;
 
@@ -422,23 +431,9 @@ function crc16Calculator(payload) {
     return crc.toString(16).toUpperCase().padStart(4, '0');
 }
 
-// Função para atualizar o campo Pix quando necessário
-function updatePixField() {
-    const formaPagamento = document.getElementById('forma_pagamento').value;
-    const pixField = document.getElementById('campo-pix');
-    const totalValue = document.getElementById('form-total').value.replace(',','.');
 
-    if (formaPagamento === 'pix') {
-        const pixPayload = generatePixPayload(name, pixKey, city, textIdentifier, totalValue);
-        document.getElementById('pix-copia-e-cola').value = pixPayload;
-        pixField.classList.remove('d-none');
-    } else {
-        pixField.classList.add('d-none');
-    }
-}
 
-// Adiciona o evento no dropdown de forma de pagamento
-document.getElementById('forma_pagamento').addEventListener('change', updatePixField);
+
 
 // Função para copiar o Pix para a área de transferência
 function copiarPix() {
@@ -456,11 +451,11 @@ function copiarPix() {
 }
 
 // Adiciona o evento ao botão de copiar Pix
-document.getElementById('botao-copiar-pix').addEventListener('click', function (event) {
-    event.preventDefault(); // Impede o botão de submeter o formulário
-    copiarPix();
-
-    
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('botao-copiar-pix').addEventListener('click', function (event) {
+        event.preventDefault();
+        copiarPix();
+    });
 });
 
 function imprimirPedido(pedidoId) {
@@ -565,19 +560,6 @@ function imprimirPedido(pedidoId) {
     }
 }
 
-const eventoSSE = new EventSource('/sse-pedidos/');
-
-eventoSSE.onmessage = function (event){
-    const novosPedidos = JSON.parse(event.data);
-
-    if (novosPedidos){
-        const audio = new Audio('/static/audio/notification.mp3');
-        audio.play();
-
-        alert('Novo pedido recebido!');
-    }
-};
-
 
 function imprimirPedidoCompleto(pedidoId){
     const pedidoCard = document.querySelector(`[onclick="imprimirPedido(${pedidoId})"]`).closest('.card');
@@ -596,7 +578,7 @@ function imprimirPedidoCompleto(pedidoId){
         var trocoText = "=)";
         if (formaPagamentoText == "Forma de Pagamento: dinheiro"){
         trocoText = pedidoCard.querySelector('div:nth-child(10)').innerText;}
-    
+
 
 
            // Lógica para contar a quantidade total de produtos
@@ -607,12 +589,12 @@ function imprimirPedidoCompleto(pedidoId){
                let isItensSection = false; // Flag para saber quando estamos na seção de itens do pedido
                linhas.forEach((linha) => {
                    linha = linha.trim(); // Remove espaços no início e no final
-       
+
                    // Ignora a primeira linha do cabeçalho ("Itens do Pedido: Quantidade")
                    if (linha.includes("Itens do Pedido: Quantidade") || linha === "") {
                        return;
                    }
-       
+
                    // Se a linha contiver ":", provavelmente é um item do pedido com quantidade
                    if (linha.includes(':')) {
                        const partes = linha.split(':'); // Divide pelo ":"
@@ -635,7 +617,7 @@ function imprimirPedidoCompleto(pedidoId){
                                    font-family: calibri;
                                    font-size: 14px;
                                    margin: 0;
-                           
+
                                    width: 50mm; /* Ideal para impressoras térmicas */
                                }
                                h1, h2, h3 {
@@ -676,7 +658,7 @@ function imprimirPedidoCompleto(pedidoId){
                            <div class="pedido-info">
                                <div>${pagoText}</div>
                                <div>${dataText}</div>
-                             
+
                                <div> ${enderecoText}</div>
                                <div> ${bairroText} </div>
                            </div>
@@ -685,7 +667,7 @@ function imprimirPedidoCompleto(pedidoId){
                            <hr>
                            <div class="pedido-info">
                               <div><strong>Qnt. Total de itens:</strong> ${totalProdutos}</div>
-                              <div> ${subtotalText} </div>    
+                              <div> ${subtotalText} </div>
                               <div><strong>Total:</strong> ${totalText}</div>
                               <div>${formaPagamentoText}</div>
                               <div>${trocoText||0}</div>
@@ -698,11 +680,11 @@ function imprimirPedidoCompleto(pedidoId){
                        </body>
                    </html>
                `;
-       
+
                // Envia para a impressão
                const janelaImpressao = window.open('', '_blank', 'width=540,height=800');
                janelaImpressao.document.write(htmlImpressao);
-       
+
                // Fecha a janela de impressão após carregar
                janelaImpressao.document.close();
                janelaImpressao.print();

@@ -1,0 +1,62 @@
+function addItem(button) {
+    const quantitySpan = button.nextElementSibling;
+    const quantityValue = quantitySpan.querySelector('span');
+    const productCard = button.closest('.product-card');
+    const productPrice = parseFloat(
+        productCard.querySelector('.product-price').innerText.replace('R$', '').replace(',', '.').trim()
+    );
+
+    // Localiza o campo <input hidden> correspondente
+    const quantidadeInput = productCard.querySelector('input[type="hidden"]');
+    
+
+    let currentQuantity = parseInt(quantityValue.innerText);
+
+    // Incrementa a quantidade
+    currentQuantity++;
+    quantityValue.innerText = currentQuantity;
+
+    // Atualiza o valor do <input hidden>
+    quantidadeInput.value = currentQuantity;
+
+    // Exibe o contador e o botão de "-" se ainda não estiver visível
+    quantitySpan.classList.remove('d-none');
+
+
+    // Atualiza o subtotal
+    subtotal += productPrice;
+    updateSubtotal();
+    updateTotal();
+    quantidadeInput = currentQuantity;
+}
+
+function removeItem(button) {
+    const quantitySpan = button.parentElement;
+    const quantityValue = quantitySpan.querySelector('span');
+    const productCard = button.closest('.product-card');
+    const productPrice = parseFloat(
+        productCard.querySelector('.product-price').innerText.replace('R$', '').replace(',', '.').trim()
+    );
+    
+    // Localiza o campo <input hidden> correspondente
+    const quantidadeInput = productCard.querySelector('input[type="hidden"]');
+
+    let currentQuantity = parseInt(quantityValue.innerText);
+
+    // Decrementa a quantidade
+    currentQuantity--;
+    quantityValue.innerText = currentQuantity;
+
+    // Atualiza o valor do <input hidden>
+        quantidadeInput.value = currentQuantity;
+    
+    // Esconde o contador e o botão de "-" se a quantidade chegar a 0
+    if (currentQuantity === 0) {
+        quantitySpan.classList.add('d-none');
+    }
+
+    // Atualiza o subtotal
+    subtotal -= productPrice;
+    updateSubtotal();
+    updateTotal();
+}

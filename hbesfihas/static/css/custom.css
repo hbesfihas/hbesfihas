@@ -20,7 +20,7 @@ footer{
     background-color: #f5f5f5;
     box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
     width: 300px;
-    
+
 }
 
 .product-name {
@@ -60,7 +60,7 @@ footer{
     text-decoration: none; /* Remove o sublinhado */
     border-radius: 8px; /* Bordas arredondadas */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sombra leve */
-    transition: transform 0.2s, box-shadow 0.2s; 
+    transition: transform 0.2s, box-shadow 0.2s;
 
 }
 
@@ -135,7 +135,7 @@ hr {
     padding: 10px 0; /* Espaçamento interno */
     border-bottom: 1px solid #c4c4c4; /* Linha divisória */
     text-align:center;
-    
+
 }
 
 .summary-item:last-child {
@@ -207,7 +207,7 @@ li {
     text-decoration: none; /* Remove o sublinhado */
     border-radius: 8px; /* Bordas arredondadas */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sombra leve */
-    transition: transform 0.2s, box-shadow 0.2s; 
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 .id-pedido{
     display: inline-table;
@@ -254,7 +254,7 @@ li {
     margin-bottom: 20px;
     border-radius: 20px;
     background-color: #f8f8f8"
-    
+
 }
 
 .card p {
@@ -308,7 +308,8 @@ li {
 .nav-tabs .nav-link {
     font-size: 15px;
     font-weight: bold;
-    color: #0025c9;
+    color: #0025c9
+    position: fixed;
 }
 .nav-tabs .nav-link.active {
     background-color: #007bff;

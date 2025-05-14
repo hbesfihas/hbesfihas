@@ -26,9 +26,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-*rlz)+az&=yqg#vve&ga_wu5gj%_*g4bu*#dmx7*!o7zw@$5=u"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1','localhost','192.168.0.107']
+ALLOWED_HOSTS = ['www.hbesfihas.com.br']
 
 
 # Application definition
@@ -45,11 +45,13 @@ INSTALLED_APPS = [
     "mathfilters",
 ]
 ASGI_APPLICATION = 'hbesfihas.asgi.application'
+
 CHANNEL_LAYERS = {
     "default": {
-    "BACKEND": "channels.layers.InMemoryChannelLayer",    
+    "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -128,12 +130,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = '/home/hbesfihas/hbesfihas/hbesfihas/static'
 
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = 'home/hbesfihas/hbesfihas/static/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static", 
+    BASE_DIR / "static",
 ]
 
 # Default primary key field type
@@ -148,6 +150,18 @@ CSRF_TRUSTED_ORIGINS = [
 
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = '/home/hbesfihas/hbesfihas/hbesfihas/media'
 
 AUTH_USER_MODEL = 'delivery.User'
+
+Q_CLUSTER = {
+    'name': 'DjangoQ',
+    'workers': 4,
+    'recycle': 500,
+    'timeout': 60,
+    'compress': True,
+    'save_limit': 250,
+    'queue_limit': 500,
+    'orm': 'default',  # Usa o banco de dados do Django como backend
+}
+

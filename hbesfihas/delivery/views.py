@@ -14,7 +14,7 @@ from asgiref.sync import async_to_sync
 from django.core.paginator import Paginator
 
 def home(request):
-    
+
     user = request.user
     if request.user.is_authenticated:
         configuracao = get_object_or_404(ConfiguracaoLoja, pk=1)
@@ -65,13 +65,13 @@ def entrada_view(request):
 def pedidos(request):
     if not request.user.is_authenticated:
         return redirect('login')  # Redireciona para a página de login, se o usuário não estiver autenticado
-    
+
     pedidos_list = Pedido.objects.filter(user=request.user).order_by('-criado_em')  # Filtra os pedidos do usuário autenticado
-    
+
     paginator = Paginator(pedidos_list, 5)
     page_number = request.GET.get('page')
     pedidos = paginator.get_page(page_number)
-    
+
     return render(request, 'pedidos.html', {'pedidos': pedidos})
 
 def limpar_valor(valor_str):
@@ -97,7 +97,7 @@ def criar_pedido(request):
             if not all(key in data for key in ['bairro', 'forma_pagamento', 'subtotal', 'total', 'itens', 'endereco']):
                 raise ValueError("Dados incompletos enviados no pedido.")
 
-            
+
             # Converter valores financeiros para Decimal
             try:
                 subtotal = Decimal(data['subtotal'])
@@ -145,6 +145,7 @@ def criar_pedido(request):
                 pontos_ganhos=pontos_ganhos  # Atribuir os pontos ganhos
             )
 
+
             return JsonResponse({
                 'status': 'success',
                 'pedido_id': pedido.id,
@@ -157,7 +158,7 @@ def criar_pedido(request):
             return JsonResponse({'status': 'error', 'message': f"Erro interno: {str(e)}"}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Método não permitido'}, status=405)
-           
+
 def contato(request):
     return render(request, 'contato.html')
 
@@ -173,7 +174,7 @@ def gerencia(request):
         pedido = get_object_or_404(Pedido, id=pedido_id)
         pedido.status = novo_status
         pedido.save()
-        
+
         return JsonResponse({'status': 'success', 'message': 'Status atualizado com sucesso!'})
     pedidos = Pedido.objects.all().order_by('-id')
     for pedido in pedidos:
@@ -215,7 +216,7 @@ def atualizar_pedidos(request):
     return render(request, 'pedidos_lista_parcial.html', {'pedidos': pedidos})
 
 def filtrar_pedidos(request):
-    
+
     return render(request, 'gerencia.html')
 
 

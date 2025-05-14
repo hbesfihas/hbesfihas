@@ -1,0 +1,1 @@
+Inputmask("(99) 99999-9999").mask(document.getElementById("whatsapp"));

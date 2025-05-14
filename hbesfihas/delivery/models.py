@@ -1,15 +1,14 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
-from django.conf import settings
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, whatsapp, nome, password=None):
         if not whatsapp:
             raise ValueError("O campo WhatsApp é obrigatório")
         if not nome:
             raise ValueError("O campo Nome é obrigatório")
-        
+
         user = self.model(nome=nome, whatsapp=whatsapp)
         user.save(using=self._db)
         return user
@@ -68,10 +67,10 @@ class Produto(models.Model):
     imagem = models.ImageField(upload_to='imagens/',blank=True, null=True)
     trocavel_por_pontos = models.BooleanField(default=False)
     pontos_troca = models.DecimalField(max_digits=5, decimal_places=0)
-    
+
     def __str__(self):
         return self.nome
-    
+
 class Pedido(models.Model):
     STATUS_CHOICES = [
         ('pendente', 'Pendente'),
@@ -99,11 +98,6 @@ class Pedido(models.Model):
     def __str__(self):
         return f'Pedido {self.id} - {self.user.nome}'
 
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def save_user_profile(sender, instance, **kwargs):
-    # Salva o perfil do usuário sempre que o usuário for salvo
-    instance.profile.save()
 
 
 class ConfiguracaoLoja(models.Model):

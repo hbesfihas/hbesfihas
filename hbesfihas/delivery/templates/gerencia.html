@@ -37,14 +37,14 @@
         <div class="tab-pane fade show active" id="pendentes" role="tabpanel" aria-labelledby="pendentes-tab">
             {% for pedido in pedidos %}
             {% if pedido.status == 'pendente' %}
-            
+
             <div class="card bg-light mb-3" style="max-width: 25rem;">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <div><strong>ID do Pedido:</strong> {{ pedido.id }}</div>
+                    <div>Pedido: # <strong>{{ pedido.id }}</strong></div>
                     <div class="text-warning"><strong>Status:</strong> {{ pedido.get_status_display }}</div>
                 </div>
                 <div class="card-body">
-                    <div class="itens-pedidos"> 
+                    <div class="itens-pedidos">
                         <span>
                             {% if pedido.pago %}
                             <i class="fa fa-check text-success"></i> <strong>Pago</strong>
@@ -54,7 +54,7 @@
                         </span>
                     </div>
                     <div><strong>Data: </strong> {{ pedido.criado_em}}</div>
-                    <div><strong>Cliente: </strong> {{ pedido.user }}</div>
+                    <div><strong>Cliente: </strong> {{ pedido.user }} - {{ pedido.user.whatsapp}}</div>
                     <div><strong>Endereço: </strong> {{ pedido.endereco }}</div>
                     <div><strong>Bairro: </strong> {{pedido.bairro}}</div>
                     <div> <textarea class="form-control" rows="10" disabled>{{ pedido.itens }}</textarea></div>
@@ -91,7 +91,7 @@
                     <div class="text-warning"><strong>Status:</strong> {{ pedido.get_status_display }}</div>
                 </div>
                 <div class="card-body">
-                    <div class="itens-pedidos"> 
+                    <div class="itens-pedidos">
                         <span>
                             {% if pedido.pago %}
                             <i class="fa fa-check text-success"></i> <strong>Pago</strong>
@@ -121,7 +121,7 @@
                     </button>
                     <button class="btn btn-secondary m-1" onclick="imprimirPedidoCompleto({{ pedido.id }})">
                         Imprimir<br>Completo
-                    </button>                    
+                    </button>
                     <button class="btn btn-success m-1"> <a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success" >Marcar como Pago</a> </button>
                 </div>
             </div>
@@ -140,7 +140,7 @@
                 </div>
                 <div class="card-body">
                     <div><strong>Enviado :</strong> {{ pedido.atualizado_em}}</div>
-                    <div class="itens-pedidos"> 
+                    <div class="itens-pedidos">
                         <span>
                             {% if pedido.pago %}
                             <i class="fa fa-check text-success"></i> <strong>Pago</strong>
@@ -164,7 +164,7 @@
                 <div class="card-footer d-block justify-content-end">
                     <button class="btn btn-success m-1" onclick="alterarStatus({{ pedido.id }}, 'entregue')">Marcar como Entregue</button>
                     <button class="btn btn-danger m-1" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
-                    <a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success">Marcar como Pago</a> 
+                    <a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success">Marcar como Pago</a>
                 </div>
             </div>
             {% endif %}
@@ -182,7 +182,7 @@
                 </div>
                 <div class="card-body">
                     <div><strong>Pronto em:</strong> {{ pedido.atualizado_em}}</div>
-                    <div class="itens-pedidos"> 
+                    <div class="itens-pedidos">
                         <span>
                             {% if pedido.pago %}
                             <i class="fa fa-check text-success"></i> <strong>Pago</strong>
@@ -204,14 +204,14 @@
                 <div class="card-footer d-block justify-content-end">
                     <button class="btn btn-success m-1" onclick="alterarStatus({{ pedido.id }},'entregue')">Entregar</button>
                     <button class="btn btn-danger m-1" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
-                    <a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success">Marcar como Pago</a> 
+                    <a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success">Marcar como Pago</a>
 
                 </div>
             </div>
             {% endif %}
             {% endfor %}
         </div>
-        
+
         <!-- Finalizados -->
         <div class="tab-pane fade" id="finalizados" role="tabpanel" aria-labelledby="finalizados-tab">
             {% for pedido in pedidos %}
@@ -223,7 +223,7 @@
                 </div>
                 <div class="card-body">
                     <div><strong>Entregue em:</strong> {{ pedido.atualizado_em}}</div>
-                    <div class="itens-pedidos"> 
+                    <div class="itens-pedidos">
                         <span>
                             {% if pedido.pago %}
                             <i class="fa fa-check text-success"></i> <strong>Pago</strong>
@@ -246,7 +246,7 @@
                 <!-- footer -->
                 <div class="card-footer d-block justify-content-end">
                     <button class="btn btn-danger m-1" onclick="alterarStatus({{ pedido.id }},'cancelado')">Cancelar</button>
-                    <a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success">Marcar como Pago</a> 
+                    <a href="{% url 'marcar_pago' pedido.id %}" class="btn btn-success">Marcar como Pago</a>
                 </div>
             </div>
             {% endif %}
