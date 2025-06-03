@@ -694,6 +694,20 @@ function imprimirPedidoCompleto(pedidoId){
        }
 
 
+document.addEventListener('DOMContentLoaded', function () {
+    const accordions = document.querySelectorAll('.accordion-button');
 
+    accordions.forEach(button => {
+        button.addEventListener('click', function (event) {
+            const targetId = this.getAttribute('data-bs-target');
+            const targetElement = document.querySelector(targetId);
+
+            // Aguarda a expansão do accordion antes de rolar
+            setTimeout(() => {
+                this.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);  // Pequeno delay para esperar a animação
+        });
+    });
+});
 
 

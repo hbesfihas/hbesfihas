@@ -31,7 +31,7 @@ def home(request):
         categorias = Categoria.objects.all()
         ultimo_endereco = request.user.ultimo_endereco if request.user.ultimo_endereco else ""
 
-        return render(request, 'home.html', {'produtos': produtos, 'bairros': bairros, 'user': user, 'ultimo_endereco': ultimo_endereco, 'categorias':categorias})
+        return render(request, 'home.html', {'produtos': produtos, 'bairros': bairros, 'user': user, 'ultimo_endereco': ultimo_endereco, 'categorias':categorias, 'configuracao':configuracao})
     else:
         return redirect('login')
 
@@ -67,12 +67,12 @@ def pedidos(request):
         return redirect('login')  # Redireciona para a página de login, se o usuário não estiver autenticado
 
     pedidos_list = Pedido.objects.filter(user=request.user).order_by('-criado_em')  # Filtra os pedidos do usuário autenticado
-
+    configuracao = get_object_or_404(ConfiguracaoLoja, pk=1)
     paginator = Paginator(pedidos_list, 5)
     page_number = request.GET.get('page')
     pedidos = paginator.get_page(page_number)
 
-    return render(request, 'pedidos.html', {'pedidos': pedidos})
+    return render(request, 'pedidos.html', {'pedidos': pedidos, 'configuracao': configuracao})
 
 def limpar_valor(valor_str):
     """Remove caracteres não numéricos e converte a string para float."""
@@ -167,6 +167,7 @@ def pix(request):
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')
 def gerencia(request):
+    configuracao = get_object_or_404(ConfiguracaoLoja, pk=1)
     if request.method == 'POST':
         # Atualizar o status do pedido
         pedido_id = request.POST.get('pedido_id')
@@ -179,7 +180,7 @@ def gerencia(request):
     pedidos = Pedido.objects.all().order_by('-id')
     for pedido in pedidos:
         pedido.troco_calculado = (pedido.total - (pedido.troco or 0))*-1
-    return render(request, 'gerencia.html', {'pedidos': pedidos})
+    return render(request, 'gerencia.html', {'pedidos': pedidos, 'configuracao':configuracao})
 
 def marcar_pago(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
